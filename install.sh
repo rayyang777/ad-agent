@@ -31,6 +31,7 @@ EOF
 }
 
 DEFAULT_USER="乐元素"
+DEFAULT_FEISHU_FOLDER_TOKEN=""
 
 SCOPE="default"
 INPUT_USER=""
@@ -156,6 +157,7 @@ DEFAULT_USER="$DEFAULT_USER" \
 INPUT_FOLDER_TOKEN="${AD_AGENT_FEISHU_FOLDER_TOKEN:-}" \
 INPUT_FEISHU_APP_ID="${AD_AGENT_FEISHU_APP_ID:-}" \
 INPUT_FEISHU_APP_SECRET="${AD_AGENT_FEISHU_APP_SECRET:-}" \
+DEFAULT_FEISHU_FOLDER_TOKEN="$DEFAULT_FEISHU_FOLDER_TOKEN" \
 SCOPE="$SCOPE" \
 ".venv/bin/python" <<'PYEOF'
 import json
@@ -185,18 +187,19 @@ else:
     username_src = "from default"
 cfg["username"] = username
 
-folder_token = os.environ.get("INPUT_FOLDER_TOKEN") or (cfg.get("feishu_drive") or {}).get("parent_node") or ""
+folder_token = (
+    os.environ.get("INPUT_FOLDER_TOKEN")
+    or (cfg.get("feishu_drive") or {}).get("parent_node")
+    or os.environ.get("DEFAULT_FEISHU_FOLDER_TOKEN", "")
+)
 app_id = os.environ.get("INPUT_FEISHU_APP_ID") or (cfg.get("feishu_app") or {}).get("app_id") or ""
 raw_secret = os.environ.get("INPUT_FEISHU_APP_SECRET") or (cfg.get("feishu_app") or {}).get("app_secret") or ""
 
-if folder_token:
-    cfg["feishu_drive"] = {"parent_node": folder_token}
-if app_id or raw_secret:
-    existing_app = cfg.get("feishu_app") or {}
-    cfg["feishu_app"] = {
-        "app_id": app_id or existing_app.get("app_id", ""),
-        "app_secret": raw_secret or existing_app.get("app_secret", ""),
-    }
+cfg["feishu_drive"] = {"parent_node": folder_token}
+cfg["feishu_app"] = {
+    "app_id": app_id,
+    "app_secret": raw_secret,
+}
 
 with open(path, "w", encoding="utf-8") as f:
     json.dump(cfg, f, ensure_ascii=False, indent=2)

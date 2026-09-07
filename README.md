@@ -30,27 +30,32 @@ MCP 是 Skills 调用外部能力的接口。本项目的 MCP 只负责原子操
 
 ```json
 {
-  "username": "报告产出用户",
-  "data_fortress_platform_user": "数据堡垒认证账号",
-  "data_fortress_aes_key": "数据堡垒 AES 秘钥",
+  "skills_scope": "default",
+  "data_fortress_platform_user": "",
+  "data_fortress_aes_key": "",
+  "username": "张三",
   "feishu_drive": {
-    "parent_node": "飞书云盘文件夹 Token"
+    "parent_node": ""
   },
   "feishu_app": {
-    "app_id": "飞书应用 ID",
-    "app_secret": "飞书应用 Secret"
+    "app_id": "",
+    "app_secret": ""
   }
 }
 ```
 
-`username` 也可以通过安装命令的 `--user` 设置。
+- `skills_scope`：安装范围，默认是 `default`
+- `username`：报告产出用户，可通过安装命令的 `--user` 设置
+- `data_fortress_platform_user`：数据堡垒认证账号
+- `data_fortress_aes_key`：数据堡垒 AES 秘钥
+- `feishu_drive.parent_node`：飞书云盘文件夹 Token
+- `feishu_app.app_id`：飞书应用 ID
+- `feishu_app.app_secret`：飞书应用 Secret
 
 ## 更新
 
 Skill 或报告模板有更新时，在业务项目根目录重新执行安装命令，然后重启 Codex 或新开任务：
 
 ```bash
-bash /tmp/ad-agent-install.sh --user 张三
+bash /tmp/ad-agent-install.sh
 ```
-
-安装生成的 `.venv`、`config.json` 和 `var/` 只保存在业务项目本地。
