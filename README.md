@@ -7,9 +7,7 @@
 cd到项目目录后执行：
 
 ```bash
-curl -fsSL -o /tmp/ad-agent-install.sh \
-  https://raw.githubusercontent.com/rayyang777/ad-agent/main/install.sh
-bash /tmp/ad-agent-install.sh --user 张三
+curl -fsSL https://raw.githubusercontent.com/rayyang777/ad-agent/main/install.sh | bash -s -- --user 张三
 ```
 
 
