@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Animal DAU report payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["metadata", "caliber", "sections"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "data_start", "data_end", "generated_date", "user"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1, "maxLength": 120},
+        "data_start": {"type": "string", "format": "date"},
+        "data_end": {"type": "string", "format": "date"},
+        "generated_date": {"type": "string", "format": "date"},
+        "user": {"type": "string", "minLength": 1, "maxLength": 40}
+      }
+    },
+    "caliber": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ports", "rule"],
+        "properties": {
+          "ports": {"type": "string", "minLength": 1, "maxLength": 80},
+          "rule": {"type": "string", "minLength": 1, "maxLength": 300}
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 6,
+      "items": {"$ref": "#/$defs/section"}
+    }
+  },
+  "$defs": {
+    "dateRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": {"type": "string", "format": "date"},
+        "end": {"type": "string", "format": "date"}
+      }
+    },
+    "displayItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "value", "detail"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1, "maxLength": 50},
+        "value": {"type": "string", "minLength": 1, "maxLength": 50},
+        "detail": {"type": "string", "minLength": 1, "maxLength": 180}
+      }
+    },
+    "card": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "body"],
+      "properties": {
+        "title": {
+          "enum": ["DAU 概况", "广告占比趋势", "净 ARPU 对比", "新增与消耗"]
+        },
+        "body": {"type": "string", "minLength": 1, "maxLength": 500}
+      }
+    },
+    "dailyRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["date", "ad_dau", "organic_dau", "total_dau", "ad_share", "ad_arpu", "organic_arpu", "ad_new", "organic_new", "ad_cost"],
+      "properties": {
+        "date": {"type": "string", "format": "date"},
+        "ad_dau": {"type": "number", "minimum": 0},
+        "organic_dau": {"type": "number", "minimum": 0},
+        "total_dau": {"type": "number", "minimum": 0},
+        "ad_share": {"type": "number", "minimum": 0, "maximum": 100},
+        "ad_arpu": {"type": "number", "minimum": 0},
+        "organic_arpu": {"type": "number", "minimum": 0},
+        "ad_new": {"type": "number", "minimum": 0},
+        "organic_new": {"type": "number", "minimum": 0},
+        "ad_cost": {"type": "number", "minimum": 0}
+      }
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "nav_level", "status"],
+      "properties": {
+        "id": {"enum": ["H5", "douyin_game", "wechatgame", "android", "harmony", "ios"]},
+        "label": {"type": "string", "minLength": 1, "maxLength": 20},
+        "nav_level": {"type": "integer", "minimum": 0, "maximum": 1},
+        "status": {"enum": ["ok", "empty"]},
+        "empty_message": {"type": "string", "minLength": 1, "maxLength": 120},
+        "kpi_date": {"type": "string", "format": "date"},
+        "kpi_fallback_note": {"type": "string", "maxLength": 120},
+        "kpis": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "prefixItems": [
+            {"allOf": [{"$ref": "#/$defs/displayItem"}, {"properties": {"title": {"const": "总 DAU"}}}]},
+            {"allOf": [{"$ref": "#/$defs/displayItem"}, {"properties": {"title": {"const": "广告占比"}}}]},
+            {"allOf": [{"$ref": "#/$defs/displayItem"}, {"properties": {"title": {"const": "广告净 ARPU"}}}]},
+            {"allOf": [{"$ref": "#/$defs/displayItem"}, {"properties": {"title": {"const": "自然净 ARPU"}}}]}
+          ]
+        },
+        "daily": {"type": "array", "minItems": 1, "maxItems": 400, "items": {"$ref": "#/$defs/dailyRow"}},
+        "chart_ranges": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["dau", "share", "new_users", "dau_cost", "share_cost"],
+          "properties": {
+            "dau": {"$ref": "#/$defs/dateRange"},
+            "share": {"$ref": "#/$defs/dateRange"},
+            "new_users": {"$ref": "#/$defs/dateRange"},
+            "dau_cost": {"$ref": "#/$defs/dateRange"},
+            "share_cost": {"$ref": "#/$defs/dateRange"}
+          }
+        },
+        "cards": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "prefixItems": [
+            {"allOf": [{"$ref": "#/$defs/card"}, {"properties": {"title": {"const": "DAU 概况"}}}]},
+            {"allOf": [{"$ref": "#/$defs/card"}, {"properties": {"title": {"const": "广告占比趋势"}}}]},
+            {"allOf": [{"$ref": "#/$defs/card"}, {"properties": {"title": {"const": "净 ARPU 对比"}}}]},
+            {"allOf": [{"$ref": "#/$defs/card"}, {"properties": {"title": {"const": "新增与消耗"}}}]}
+          ]
+        },
+        "trend": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tag", "paragraphs", "recommendation"],
+          "properties": {
+            "tag": {
+              "enum": ["双轮驱动·协同增长", "逆向对冲·有效", "逆向对冲·待改善", "买量拉动·依赖上升", "买量低效·DAU滞涨", "DAU下滑·投放未跟", "投放收缩·DAU承压", "自然回暖·买量减弱", "自然驱动·投放稳定", "全面下行·需提振", "趋势平稳"]
+            },
+            "paragraphs": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {"type": "string", "minLength": 1, "maxLength": 600}
+            },
+            "recommendation": {"type": "string", "minLength": 1, "maxLength": 50}
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "empty"}}},
+          "then": {"required": ["empty_message"]},
+          "else": {"required": ["kpi_date", "kpis", "daily", "chart_ranges", "cards", "trend"]}
+        }
+      ]
+    }
+  }
+}

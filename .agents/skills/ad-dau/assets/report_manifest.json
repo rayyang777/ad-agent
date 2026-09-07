@@ -1,0 +1,9 @@
+{
+  "template_id": "ad-dau-v1",
+  "schema_version": "1",
+  "template": "report_template.html",
+  "schema": "report_schema.json",
+  "config_bindings": {
+    "metadata.user": "username"
+  }
+}

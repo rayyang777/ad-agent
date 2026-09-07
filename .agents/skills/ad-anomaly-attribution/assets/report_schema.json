@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Animal ad anomaly attribution report payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["metadata", "overview", "attributions", "summary"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "anomaly_type", "metric", "dimensions", "anomaly_period", "baseline_period", "data_date", "user"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1, "maxLength": 120},
+        "anomaly_type": {"type": "string", "minLength": 1, "maxLength": 40},
+        "metric": {"type": "string", "minLength": 1, "maxLength": 100},
+        "dimensions": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"type": "string", "minLength": 1, "maxLength": 100}},
+        "anomaly_period": {"type": "string", "minLength": 1, "maxLength": 60},
+        "baseline_period": {"type": "string", "minLength": 1, "maxLength": 60},
+        "data_date": {"type": "string", "format": "date"},
+        "user": {"type": "string", "minLength": 1, "maxLength": 40}
+      }
+    },
+    "overview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scale_metrics", "trend_charts"],
+      "properties": {
+        "scale_metrics": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"$ref": "#/$defs/metricCard"}},
+        "trend_charts": {"type": "array", "minItems": 1, "maxItems": 8, "items": {"$ref": "#/$defs/chart"}}
+      }
+    },
+    "attributions": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "prefixItems": [
+        {"allOf": [{"$ref": "#/$defs/attribution"}, {"properties": {"title": {"const": "新老用户拆分"}}}]},
+        {"allOf": [{"$ref": "#/$defs/attribution"}, {"properties": {"title": {"const": "闯关行为变化"}}}]},
+        {"allOf": [{"$ref": "#/$defs/attribution"}, {"properties": {"title": {"const": "前端流量变化"}}}]}
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["confirmed", "hypotheses", "recommendations", "monitoring"],
+      "properties": {
+        "confirmed": {"type": "array", "minItems": 1, "maxItems": 8, "items": {"type": "string", "minLength": 1, "maxLength": 400}},
+        "hypotheses": {"type": "array", "maxItems": 8, "items": {"type": "string", "pattern": "^\\[推测\\]", "maxLength": 400}},
+        "recommendations": {"type": "array", "minItems": 2, "maxItems": 4, "items": {"type": "string", "minLength": 1, "maxLength": 160}},
+        "monitoring": {"type": "array", "minItems": 1, "maxItems": 8, "items": {"type": "string", "minLength": 1, "maxLength": 160}}
+      }
+    }
+  },
+  "$defs": {
+    "metricCard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "current", "baseline", "change"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 50},
+        "current": {"type": "string", "minLength": 1, "maxLength": 40},
+        "baseline": {"type": "string", "minLength": 1, "maxLength": 40},
+        "change": {"type": "string", "minLength": 1, "maxLength": 40},
+        "severity": {"enum": ["normal", "warning", "critical"]}
+      }
+    },
+    "series": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "values", "kind"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 60},
+        "values": {"type": "array", "minItems": 1, "maxItems": 400, "items": {"type": ["number", "null"]}},
+        "kind": {"enum": ["current", "baseline"]}
+      }
+    },
+    "chart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "note", "dates", "y_axis", "series", "anomaly_start"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1, "maxLength": 100},
+        "note": {"type": "string", "minLength": 1, "maxLength": 240},
+        "dates": {"type": "array", "minItems": 1, "maxItems": 400, "items": {"type": "string", "format": "date"}},
+        "y_axis": {"enum": ["number", "percent"]},
+        "series": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"$ref": "#/$defs/series"}},
+        "anomaly_start": {"type": "string", "format": "date"},
+        "immature_from": {"type": ["string", "null"], "format": "date"}
+      }
+    },
+    "table": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "headers", "rows"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1, "maxLength": 100},
+        "headers": {"type": "array", "minItems": 2, "maxItems": 12, "items": {"type": "string", "minLength": 1, "maxLength": 60}},
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 200,
+          "items": {"type": "array", "minItems": 2, "maxItems": 12, "items": {"type": "string", "maxLength": 160}}
+        }
+      }
+    },
+    "attribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "confidence", "conclusion", "details", "charts", "tables"],
+      "properties": {
+        "title": {"enum": ["新老用户拆分", "闯关行为变化", "前端流量变化"]},
+        "confidence": {"enum": ["confirmed", "hypothesis"]},
+        "conclusion": {"type": "string", "minLength": 1, "maxLength": 500},
+        "details": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"type": "string", "minLength": 1, "maxLength": 500}},
+        "charts": {"type": "array", "maxItems": 8, "items": {"$ref": "#/$defs/chart"}},
+        "tables": {"type": "array", "maxItems": 8, "items": {"$ref": "#/$defs/table"}}
+      }
+    }
+  }
+}

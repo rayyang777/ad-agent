@@ -1,0 +1,9 @@
+# install.sh 使用默认安装范围（未传 --scope 或传 --scope default）时安装的 skill 清单。
+# 一行一个 skill 目录名；以 # 开头的行为注释；空行忽略。
+# 运行 `install.sh --scope all` 可安装仓库 .agents/skills/ 下的全部 skill。
+#
+# 若要新增默认 skill，在本文件追加一行 skill 目录名即可。
+
+ad-dau
+ad-anomaly-attribution
+ad-skills

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Animal 广告投放异动归因报告</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#F5F7FB;color:#1F2937;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;letter-spacing:0}.page{width:min(1280px,calc(100% - 40px));margin:20px auto 40px}.title-band{background:#EFF6FF;border:1px solid #DBEAFE;border-left:6px solid #2563EB;border-radius:8px;padding:22px 26px}.title-band h1{margin:0;color:#173B73;font-size:26px;line-height:1.35;letter-spacing:0}.meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:16px}.meta-item{min-width:0}.meta-label{display:block;color:#64748B;font-size:12px;margin-bottom:5px}.meta-value{display:block;color:#111827;font-size:14px;font-weight:650;line-height:1.5;overflow-wrap:anywhere}.section{margin-top:18px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:22px;box-shadow:0 2px 10px rgba(15,23,42,.04)}.section h2{font-size:19px;color:#173B73;margin:0 0 16px;border-left:4px solid #2563EB;padding-left:10px;letter-spacing:0}.section h3{font-size:15px;color:#374151;margin:18px 0 10px;letter-spacing:0}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.metric{background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;padding:14px;min-width:0}.metric.warning{border-left:4px solid #F59E0B}.metric.critical{border-left:4px solid #DC2626}.metric-name{color:#475569;font-size:12px}.metric-current{color:#111827;font-size:24px;font-weight:800;margin:8px 0;overflow-wrap:anywhere}.metric-compare{color:#64748B;font-size:12px;line-height:1.6}.metric-change{color:#2563EB;font-weight:700}.metric.critical .metric-change{color:#DC2626}.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}.charts>.chart-card:only-child{grid-column:1/-1}.chart-card{border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;min-width:0}.chart-head{display:flex;justify-content:space-between;gap:10px;padding:12px 14px 0}.chart-title{margin:0;color:#374151;font-size:14px;line-height:1.4;letter-spacing:0}.info{width:22px;height:22px;flex:0 0 22px;border:0;border-radius:50%;background:#E0F2FE;color:#0369A1;font-weight:700;cursor:help}.chart{height:320px;width:100%}.attribution{margin-top:14px;background:#FAFBFC;border:1px solid #E5E7EB;border-radius:8px;padding:18px}.attribution:first-of-type{margin-top:0}.attribution-title{font-size:16px;color:#173B73;margin:0 0 10px}.conclusion{border-left:4px solid #2563EB;background:#EFF6FF;border-radius:6px;padding:12px 14px;line-height:1.7}.conclusion.hypothesis{border-left-color:#F59E0B;background:#FFFBEB;color:#7C4A03}.confidence{font-weight:750;margin-right:7px}.details{margin:12px 0 0;padding-left:22px;color:#374151;line-height:1.75}.table-wrap{margin-top:14px;overflow:auto;border:1px solid #E5E7EB;border-radius:8px}.table-title{padding:10px 12px;background:#F8FAFC;color:#374151;font-weight:700;font-size:13px}.report-table{width:100%;border-collapse:collapse;min-width:520px}.report-table th,.report-table td{padding:10px 12px;border-top:1px solid #E5E7EB;text-align:left;font-size:13px;line-height:1.5}.report-table th{background:#F8FAFC;color:#475569}.report-table td{color:#1F2937}.summary{background:#FFFFFF}.summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.summary-block{background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;padding:15px}.summary-block h3{margin:0 0 8px;color:#173B73}.summary-block ul,.summary-block ol{margin:0;padding-left:22px;line-height:1.75}.summary-block.hypothesis{background:#FFFBEB;border-color:#FDE68A}.summary-block.hypothesis h3{color:#92400E}.report-error{max-width:900px;margin:50px auto;padding:20px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px}.muted{color:#64748B}
+    @media(max-width:900px){.meta{grid-template-columns:repeat(2,minmax(0,1fr))}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.charts{grid-template-columns:minmax(0,1fr)}}
+    @media(max-width:560px){.page{width:100%;margin:0}.title-band,.meta,.section{border-radius:0;border-left:0;border-right:0}.title-band{padding:20px 16px}.title-band h1{font-size:22px}.meta{grid-template-columns:minmax(0,1fr);margin-top:0}.section{margin-top:12px;padding:18px 16px}.metrics,.summary-grid{grid-template-columns:minmax(0,1fr)}.chart{height:300px}}
+  </style>
+</head>
+<body>
+  <main id="app" class="page"></main>
+  <script>
+    const REPORT_DATA=__REPORT_DATA_JSON__;
+    const CHARTS=[];
+    const COLORS=['#2563EB','#0891B2','#7C3AED','#059669','#D97706','#DC2626'];
+    const el=(tag,className,text)=>{const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node};
+    const append=(parent,...children)=>{children.filter(Boolean).forEach(child=>parent.appendChild(child));return parent};
+    const numberAxis=value=>{const number=Number(value);if(Math.abs(number)>=1e8)return `${Number((number/1e8).toFixed(2))}亿`;if(Math.abs(number)>=1e4)return `${Number((number/1e4).toFixed(2))}万`;return number};
+    const numberTip=value=>value==null?'':Number(value).toLocaleString('en-US');
+    const percentTip=value=>value==null?'':`${Number(value).toFixed(2)}%`;
+
+    function addMeta(parent,label,value){const item=el('div','meta-item');append(item,el('span','meta-label',label),el('span','meta-value',value));append(parent,item)}
+
+    function renderChart(chartData,id){
+      chartData.series.forEach(series=>{if(series.values.length!==chartData.dates.length)throw new Error(`${chartData.title} 的日期与序列长度不一致`)});
+      const card=el('div','chart-card');const head=el('div','chart-head');const info=el('button','info','i');info.type='button';info.title=chartData.note;info.setAttribute('aria-label',chartData.note);append(head,el('h3','chart-title',chartData.title),info);
+      const node=el('div','chart');node.id=id;append(card,head,node);
+      requestAnimationFrame(()=>{
+        const isPercent=chartData.y_axis==='percent';let currentIndex=0;
+        const series=chartData.series.map(item=>{
+          const isBaseline=item.kind==='baseline';const isFirstCurrent=!isBaseline&&currentIndex===0;const color=isBaseline?'#94A3B8':COLORS[currentIndex++%COLORS.length];
+          const values=item.values.map((value,index)=>chartData.immature_from&&chartData.dates[index]>=chartData.immature_from&&value!==null?{value,itemStyle:{opacity:.35}}:value);
+          const result={name:item.name,type:'line',data:values,smooth:true,showSymbol:false,lineStyle:{width:2.5,color,type:isBaseline?'dashed':'solid'},itemStyle:{color},tooltip:{valueFormatter:isPercent?percentTip:numberTip}};
+          if(isFirstCurrent){
+            const pointIndex=chartData.dates.indexOf(chartData.anomaly_start);
+            const anomalyLabel=chartData.anomaly_start.slice(5);
+            result.markLine={silent:true,symbol:'none',lineStyle:{color:'#DC2626',type:'dashed'},label:{formatter:'异常起点',color:'#B91C1C'},data:[{xAxis:anomalyLabel}]};
+            if(pointIndex>=0&&item.values[pointIndex]!==null)result.markPoint={symbol:'circle',symbolSize:11,itemStyle:{color:'#DC2626'},label:{show:false},data:[{coord:[anomalyLabel,item.values[pointIndex]]}]};
+          }
+          return result;
+        });
+        const chart=echarts.init(node);chart.setOption({legend:{top:8,left:'center'},grid:{top:48,left:12,right:20,bottom:32,containLabel:true},tooltip:{trigger:'axis'},xAxis:{type:'category',data:chartData.dates.map(date=>date.slice(5))},yAxis:{type:'value',min:0,axisLabel:{formatter:isPercent?'{value}%':numberAxis}},series});CHARTS.push(chart);
+      });
+      return card;
+    }
+
+    function renderTable(tableData){
+      const wrap=el('div','table-wrap');append(wrap,el('div','table-title',tableData.title));const table=el('table','report-table');const thead=el('thead');const headRow=el('tr');tableData.headers.forEach(value=>append(headRow,el('th','',value)));append(thead,headRow);const tbody=el('tbody');
+      tableData.rows.forEach(row=>{if(row.length!==tableData.headers.length)throw new Error(`${tableData.title} 的表头与数据列数不一致`);const tr=el('tr');row.forEach(value=>append(tr,el('td','',value)));append(tbody,tr)});append(table,thead,tbody);append(wrap,table);return wrap;
+    }
+
+    function renderListBlock(title,items,className='',ordered=false){
+      const block=el('div',`summary-block ${className}`.trim());append(block,el('h3','',title));const list=el(ordered?'ol':'ul');items.forEach(item=>append(list,el('li','',item)));append(block,list);return block;
+    }
+
+    function renderReport(){
+      const app=document.getElementById('app');document.title=REPORT_DATA.metadata.title;
+      const title=el('header','title-band');append(title,el('h1','',REPORT_DATA.metadata.title));append(app,title);
+      const meta=el('section','meta');addMeta(meta,'异动类型',REPORT_DATA.metadata.anomaly_type);addMeta(meta,'监控指标',REPORT_DATA.metadata.metric);addMeta(meta,'分析维度',REPORT_DATA.metadata.dimensions.join('；'));addMeta(meta,'异常期',REPORT_DATA.metadata.anomaly_period);addMeta(meta,'基期',REPORT_DATA.metadata.baseline_period);addMeta(meta,'数据日期',REPORT_DATA.metadata.data_date);addMeta(meta,'产出用户',REPORT_DATA.metadata.user);append(app,meta);
+
+      const overview=el('section','section');append(overview,el('h2','','当前数据现状'),el('h3','','广告投放整体盘面'));
+      const metrics=el('div','metrics');REPORT_DATA.overview.scale_metrics.forEach(item=>{const card=el('div',`metric ${item.severity||'normal'}`);append(card,el('div','metric-name',item.name),el('div','metric-current',item.current));const compare=el('div','metric-compare',`基期：${item.baseline}　`);append(compare,el('span','metric-change',item.change));append(card,compare);append(metrics,card)});append(overview,metrics,el('h3','','异动指标波动'));
+      const overviewCharts=el('div','charts');REPORT_DATA.overview.trend_charts.forEach((chart,index)=>append(overviewCharts,renderChart(chart,`overview-chart-${index}`)));append(overview,overviewCharts);append(app,overview);
+
+      const attributionSection=el('section','section');append(attributionSection,el('h2','','异动归因'));
+      REPORT_DATA.attributions.forEach((item,index)=>{const block=el('article','attribution');append(block,el('h3','attribution-title',item.title));const conclusion=el('div',item.confidence==='hypothesis'?'conclusion hypothesis':'conclusion');append(conclusion,el('span','confidence',item.confidence==='hypothesis'?'[推测]':'已证实'),document.createTextNode(item.conclusion));append(block,conclusion);const details=el('ul','details');item.details.forEach(text=>append(details,el('li','',text)));append(block,details);
+        if(item.charts.length){const charts=el('div','charts');item.charts.forEach((chart,chartIndex)=>append(charts,renderChart(chart,`attribution-${index}-chart-${chartIndex}`)));append(block,charts)}
+        item.tables.forEach(table=>append(block,renderTable(table)));append(attributionSection,block)});append(app,attributionSection);
+
+      const summary=el('section','section summary');append(summary,el('h2','','总结'));const grid=el('div','summary-grid');append(grid,renderListBlock('归因分析结论',REPORT_DATA.summary.confirmed),renderListBlock('推测与待确认',REPORT_DATA.summary.hypotheses.length?REPORT_DATA.summary.hypotheses:['无'],'hypothesis'),renderListBlock('投放建议',REPORT_DATA.summary.recommendations,'',true),renderListBlock('后续监控',REPORT_DATA.summary.monitoring));append(summary,grid);append(app,summary);
+    }
+
+    try{renderReport();window.addEventListener('resize',()=>CHARTS.forEach(chart=>chart.resize()))}catch(error){document.getElementById('app').replaceChildren(el('div','report-error','报告渲染失败，请检查结构化报告数据。'));console.error(error)}
+  </script>
+</body>
+</html>

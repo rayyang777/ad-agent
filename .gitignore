@@ -1,0 +1,19 @@
+.DS_Store
+**/.DS_Store
+*.swp
+*.swo
+.env
+.env.local
+
+__pycache__/
+*.pyc
+/mcp/tests/
+
+.agents/cache/
+
+# BEGIN ad-agent local files
+/.codex/config.toml
+/.venv/
+/var/
+/config.json
+# END ad-agent local files
