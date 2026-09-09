@@ -24,14 +24,10 @@ Options:
 Environment:
   AD_AGENT_ARCHIVE_URL         Optional source archive URL
   AD_AGENT_SOURCE_DIR          Local ad-agent source directory (skips download)
-  AD_AGENT_FEISHU_FOLDER_TOKEN Feishu Drive target folder
-  AD_AGENT_FEISHU_APP_ID       Feishu application ID
-  AD_AGENT_FEISHU_APP_SECRET   Feishu application secret
 EOF
 }
 
 DEFAULT_USER="乐元素"
-DEFAULT_FEISHU_FOLDER_TOKEN=""
 
 SCOPE="default"
 INPUT_USER=""
@@ -154,10 +150,6 @@ mkdir -p "$(dirname "$CONFIG_FILE")"
 CONFIG_FILE="$CONFIG_FILE" \
 INPUT_USER="$INPUT_USER" \
 DEFAULT_USER="$DEFAULT_USER" \
-INPUT_FOLDER_TOKEN="${AD_AGENT_FEISHU_FOLDER_TOKEN:-}" \
-INPUT_FEISHU_APP_ID="${AD_AGENT_FEISHU_APP_ID:-}" \
-INPUT_FEISHU_APP_SECRET="${AD_AGENT_FEISHU_APP_SECRET:-}" \
-DEFAULT_FEISHU_FOLDER_TOKEN="$DEFAULT_FEISHU_FOLDER_TOKEN" \
 SCOPE="$SCOPE" \
 ".venv/bin/python" <<'PYEOF'
 import json
@@ -187,13 +179,9 @@ else:
     username_src = "from default"
 cfg["username"] = username
 
-folder_token = (
-    os.environ.get("INPUT_FOLDER_TOKEN")
-    or (cfg.get("feishu_drive") or {}).get("parent_node")
-    or os.environ.get("DEFAULT_FEISHU_FOLDER_TOKEN", "")
-)
-app_id = os.environ.get("INPUT_FEISHU_APP_ID") or (cfg.get("feishu_app") or {}).get("app_id") or ""
-raw_secret = os.environ.get("INPUT_FEISHU_APP_SECRET") or (cfg.get("feishu_app") or {}).get("app_secret") or ""
+folder_token = (cfg.get("feishu_drive") or {}).get("parent_node") or ""
+app_id = (cfg.get("feishu_app") or {}).get("app_id") or ""
+raw_secret = (cfg.get("feishu_app") or {}).get("app_secret") or ""
 
 cfg["feishu_drive"] = {"parent_node": folder_token}
 cfg["feishu_app"] = {

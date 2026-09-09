@@ -7,12 +7,12 @@ VENV_DIR="$PROJECT_ROOT/.venv"
 PROJECT_CONFIG="$PROJECT_ROOT/.codex/config.toml"
 
 if ! command -v "$PYTHON_CMD" >/dev/null 2>&1; then
-  echo "Error: Python 3.10 or newer is required. Install Python and rerun this command." >&2
+  echo "Error: Python 3.9 or newer is required. Install Python and rerun this command." >&2
   exit 1
 fi
 
-if ! "$PYTHON_CMD" -c 'import sys; raise SystemExit(sys.version_info < (3, 10))'; then
-  echo "Error: Python 3.10 or newer is required. Install Python and rerun this command." >&2
+if ! "$PYTHON_CMD" -c 'import sys; raise SystemExit(sys.version_info < (3, 9))'; then
+  echo "Error: Python 3.9 or newer is required. Install Python and rerun this command." >&2
   exit 1
 fi
 
@@ -41,7 +41,7 @@ config = Path(os.environ["PROJECT_CONFIG"])
 start = "# BEGIN ad-agent MCP"
 end = "# END ad-agent MCP"
 
-def toml_string(value: Path | str) -> str:
+def toml_string(value) -> str:
     return json.dumps(str(value), ensure_ascii=False)
 
 block = "\n".join([
