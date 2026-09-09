@@ -5,7 +5,7 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 
 在开始之前，请先阅读 `knowledge/sql_guidelines.md` 与 `knowledge/metric_definitions.md`。之后按下面流程进行 Animal 广告投放业务的异动归因，**自动完成全部流程，无需用户二次确认**。
 
-本 Skill 负责全部业务编排、归因判断和报告数据组织。项目级 `ad_agent` MCP 只提供原子接口：通过 `ad_query` 按需查询数据，通过 `ad_render_report` 使用固定模板渲染，通过 `ad_upload_report` 上传报告并返回 URL。
+本 Skill 负责全部业务编排、归因判断和报告数据组织。项目级 `ad_agent` MCP 只提供原子接口：通过 `ad_query` 按需查询数据，通过 `ad_render_report` 使用固定模板渲染，通过 `ad_upload_report` 上传本地报告并返回 URL。
 
 ---
 

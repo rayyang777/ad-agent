@@ -9,7 +9,7 @@ description: 当用户分析广告投放（买量）对开心消消乐（Animal�
 
 - `ad_query`：执行一条只读 SQL，支持指定查询引擎，返回 CSV。
 - `ad_render_report`：使用本 Skill 的固定模板和 Schema，把结构化报告数据渲染为 HTML，不上传。
-- `ad_upload_report`：上传已经渲染的 HTML 文件，返回 URL。
+- `ad_upload_report`：上传本地已有的 HTML 文件，返回 URL；文件可来自 `ad_render_report` 或其他本地生成流程。
 
 全流程自主执行，不因端口选择、日期范围、SQL、报告格式或上传向用户征询确认。用户未明示时按本文默认值继续；出现未覆盖的二选一或多选时采用最常规、最保守的方案，并在完成后说明采用的默认值。只有遇到 SQL 鉴权失败、上传失败等无法继续的错误时才报告。
 

@@ -206,21 +206,16 @@ def ad_render_report(arguments: dict[str, Any]) -> dict[str, Any]:
     return render_report(ROOT, RUNTIME_DIR, arguments, config=load_project_config())
 
 def ad_upload_report(arguments: dict[str, Any]) -> dict[str, Any]:
-    """Upload an existing runtime report; never renders a report."""
+    """Upload an existing local HTML report; never renders a report."""
     report_file = str(arguments.get("report_file") or "").strip()
     if not report_file:
         raise ValueError("report_file is required")
     title = str(arguments.get("title") or "Animal 广告分析报告").strip()
     today = str(arguments.get("today") or dt.date.today().isoformat())
     upload_name = safe_name(arguments.get("upload_name"), default_upload_name(title, today))
-    RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
     report_path = Path(report_file).expanduser().resolve()
-    try:
-        report_path.relative_to(RUNTIME_DIR.resolve())
-    except ValueError as exc:
-        raise ValueError("report_file must be inside the ad-agent runtime directory") from exc
     if not report_path.is_file() or report_path.suffix.lower() != ".html":
-        raise ValueError("report_file must be an existing HTML file")
+        raise ValueError("report_file must be an existing local HTML file")
     url = run_stage("飞书上传", [sys.executable, "mcp/shared/feishu_upload.py", "--file",
                     str(report_path), "--upload-name", upload_name], 700).splitlines()[-1].strip()
     return {"report_html": str(report_path), "upload_name": upload_name, "url": url}
@@ -248,7 +243,7 @@ TOOLS = [
      "inputSchema": {"type": "object", "properties": {"template_id": {"type": "string"},
          "report_data": {"type": "object"}, "local_name": {"type": "string"}},
          "required": ["template_id", "report_data"], "additionalProperties": False}},
-    {"name": "ad_upload_report", "description": "上传运行目录内已经渲染的 HTML 并返回 URL；默认文件名为“报告标题 - 日期.html”，不生成报告。",
+    {"name": "ad_upload_report", "description": "上传本地已有的 HTML 报告并返回 URL；文件可以来自 MCP 渲染、Skill、Codex 或其他本地流程，不生成报告。",
      "inputSchema": {"type": "object", "properties": {"report_file": {"type": "string"},
          "title": {"type": "string"}, "today": {"type": "string"}, "upload_name": {"type": "string"}},
          "required": ["report_file"], "additionalProperties": False}},

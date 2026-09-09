@@ -20,7 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/rayyang777/ad-agent/main/install.sh
 
 ## MCP
 
-MCP 是 Skills 调用外部能力的接口。本项目的 MCP 只负责原子操作：提交查询、查看进度、获取结果、渲染报告、上传文件；分析思路和报告内容由对应 Skill 负责。
+MCP 是 Skills 调用外部能力的接口。本项目的 MCP 只负责原子操作：提交查询、查看进度、获取结果、渲染报告、上传本地文件；分析思路和报告内容由对应 Skill 负责。
 
 ## 配置
 
