@@ -4,21 +4,21 @@
 
 | 逻辑表 | 物理表 | 粒度 | `ds`读取类型 | 主要用途 |
 |---|---|---|---|---|
-| APP成本与媒体表 | `dm_ad.app_et_ad_cost_report_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 广告成本、曝光、点击、预约 |
-| APP新增设备表 | `dm_ad.app_et_ad_equip_new_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备、实名新增设备、固定成本 |
-| APP回流设备表 | `dm_ad.app_et_ad_equip_back_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 回流设备 |
-| APP首日行为表 | `dm_ad.app_et_ad_firstday_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 首日在线时长、首日登录、等级行为 |
-| APP留存表 | `dm_ad.app_et_ad_retention_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日留存 |
-| APP付费设备表 | `dm_ad.app_et_ad_pay_num_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日付费设备数、截至当前付费设备数 |
-| APP收入表 | `dm_ad.app_et_ad_revenue_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日累计收入 |
-| APP回流收入表 | `dm_ad.app_et_ad_back_revenue_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 回流设备N日累计收入 |
-| APP净收入表 | `dm_ad.app_et_ad_custom_revenue_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日累计净收入及拆分收入 |
-| APP回流净收入表 | `dm_ad.app_et_ad_back_custom_revenue_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 回流设备N日累计净收入及拆分收入 |
-| APP内购收入表 | `dm_ad.app_et_ad_pay_amount_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日累计内购收入 |
-| APP回流内购收入表 | `dm_ad.app_et_ad_back_pay_amount_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 回流设备N日累计内购收入 |
-| APP变现收入表 | `dm_ad.app_et_ad_advmon_pay_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日累计变现收入 |
-| APP回流变现收入表 | `dm_ad.app_et_ad_back_advmon_pay_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 回流设备N日累计变现收入 |
-| APP内购次数表 | `dm_ad.app_et_ad_pay_times_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日累计内购次数 |
+| 成本与媒体表 | `dm_ad.app_et_ad_cost_report_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 广告成本、曝光、点击、预约 |
+| 新增设备表 | `dm_ad.app_et_ad_equip_new_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备、实名新增设备、固定成本 |
+| 回流设备表 | `dm_ad.app_et_ad_equip_back_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 回流设备 |
+| 首日行为表 | `dm_ad.app_et_ad_firstday_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 首日在线时长、首日登录、等级行为 |
+| 留存表 | `dm_ad.app_et_ad_retention_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日留存 |
+| 付费设备表 | `dm_ad.app_et_ad_pay_num_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日付费设备数、截至当前付费设备数 |
+| 收入表 | `dm_ad.app_et_ad_revenue_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日累计收入 |
+| 回流收入表 | `dm_ad.app_et_ad_back_revenue_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 回流设备N日累计收入 |
+| 净收入表 | `dm_ad.app_et_ad_custom_revenue_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日累计净收入及拆分收入 |
+| 回流净收入表 | `dm_ad.app_et_ad_back_custom_revenue_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 回流设备N日累计净收入及拆分收入 |
+| 内购收入表 | `dm_ad.app_et_ad_pay_amount_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日累计内购收入 |
+| 回流内购收入表 | `dm_ad.app_et_ad_back_pay_amount_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 回流设备N日累计内购收入 |
+| 变现收入表 | `dm_ad.app_et_ad_advmon_pay_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日累计变现收入 |
+| 回流变现收入表 | `dm_ad.app_et_ad_back_advmon_pay_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 回流设备N日累计变现收入 |
+| 内购次数表 | `dm_ad.app_et_ad_pay_times_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 新增设备N日累计内购次数 |
 | 关键行为汇总表 | `dm_ad.app_et_ad_callback_event_da` | 展现类型 + 投放维度 + 新增日期 | 全量快照 | 关键行为、投放维度及汇总指标 |
 | 用户归因表 | `bi.animal_uid_ray_2026` | 用户 | 日增量明细 | 圈定广告用户、新设备、回流用户和投放维度；`ds`为用户新增日期 |
 | 付费明细表 | `dw_dp.dwd_dp_payment_success_basic_di` | 用户 + 付费事件 | 日增量明细 | 用户级付费、净收入、付费用户数 |
@@ -38,9 +38,9 @@
 
 “全量快照”描述的是单个快照分区的数据覆盖范围，不表示该表只包含广告量；表中的实际展现类型仍需按用户问题和知识库规则过滤。内购分成比例表`dm_ad.dim_et_custom_pay_da`无分区，不添加`ds`条件。
 
-## APP每日汇总表
+## 每日汇总表
 
-APP每日汇总表按展现类型、投放维度和新增日期预聚合，可覆盖广告量、自然量、测试量和直拉等展现类型，但每张表的实际支持范围可能不同。APP端未明确指定关键行为时优先从每日汇总表取数；如果指定维度不受每日汇总表支持，改用用户级明细表。H5端优先从关键行为汇总表取数；如果目标指标或维度不受关键行为表支持，改用用户级明细表。该组表的`ds读取类型`均为`全量快照`，固定使用`ds=昨天`，新增日期使用`substr(install_date, 1, 10)`筛选。完整路由规则按`sql.md`执行。
+每日汇总表按展现类型、投放维度和新增日期预聚合，可覆盖广告量、自然量、测试量和直拉等展现类型，但每张表的实际支持范围可能不同。APP端未明确关键行为时优先从每日汇总表取数；如果指定维度不受每日汇总表支持，改用用户级明细表。H5端优先从关键行为汇总表取数；如果目标指标或维度不受关键行为表支持，可改用每日汇总表或用户级明细表。APP端查询广告成本时，还必须从新增设备表读取固定成本，与成本与媒体表的媒体折后成本分别聚合后相加；H5端不读取固定成本。该组表的`ds读取类型`均为`全量快照`，固定使用`ds=昨天`，新增日期使用`substr(install_date, 1, 10)`筛选。完整路由规则按`sql.md`执行。
 
 汇总表能够查询但目标指标没有数据时，不能直接返回空结果。应先检查分区、产品、展现类型、维度过滤和指标成熟度，再回查支持同一口径的用户级明细表，避免将底层数据未更新误判为业务指标为空。
 
@@ -72,7 +72,7 @@ APP每日汇总表按展现类型、投放维度和新增日期预聚合，可�
 | 物理表 | 主要字段 | 指标能力与口径 |
 |---|---|---|
 | `dm_ad.app_et_ad_cost_report_da` | `discounted_cost_cny`、`cost_cny`、`impression`、`click`、`reserve`、`month_discounted_cost_cny` | 媒体折后成本、媒体源成本、曝光、点击、预约、当月折后成本 |
-| `dm_ad.app_et_ad_equip_new_da` | `all_new_equip_total`、`real_name_equip_total`、`stand_by_cost`、`month_all_new_equip`、`month_stand_by_cost` | 新增设备、实名新增设备、固定成本及当月汇总值 |
+| `dm_ad.app_et_ad_equip_new_da` | `all_new_equip_total`、`real_name_equip_total`、`stand_by_cost` | 新增设备、实名新增设备、固定成本 |
 | `dm_ad.app_et_ad_equip_back_da` | `back_equip_total` | 回流设备，仅适用于广告量相关展现类型 |
 | `dm_ad.app_et_ad_firstday_da` | `new_udid_online_min`、`new_udid_login_day1`~`new_udid_login_day4`、`new_udid_dd1_2`、`new_udid_dd1_10`、`new_udid_dd3_2`、`new_udid_dd3_10` | 新增设备首日在线时长、登录和等级行为 |
 | `dm_ad.app_et_ad_retention_da` | `new_udid_day{N}` | 新增设备第N日留存数，N取2/3/7/14/30/60/90/180 |
@@ -93,7 +93,7 @@ APP每日汇总表按展现类型、投放维度和新增日期预聚合，可�
 
 物理表：`dm_ad.app_et_ad_callback_event_da`
 
-该表同时承载关键行为标签、投放维度和广告汇总指标，`ds`读取类型为`全量快照`，分区键为`ds`和`appid`，固定使用`ds=昨天`并同时限制目标`appid`。H5端优先使用该表；目标指标或维度不受支持时改用用户级明细表。APP端只有出现`行为标签`、关键行为专属`投放分类`或`投放类型=关键行为`时才使用该表。
+该表同时承载关键行为标签、投放维度和广告汇总指标，`ds`读取类型为`全量快照`，分区键为`ds`和`appid`，固定使用`ds=昨天`并同时限制目标`appid`。H5端优先使用该表；目标指标或维度不受支持时，可改用每日汇总表或用户级明细表。APP端只有出现`行为标签`、关键行为专属`投放分类`或`投放类型=关键行为`时才使用该表。
 
 ### 维度字段
 
