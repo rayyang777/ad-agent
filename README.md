@@ -14,7 +14,7 @@ curl -fsSL https://raw.githubusercontent.com/rayyang777/ad-agent/main/install.sh
 
 ## 支持的 Skills
 
-- `ad-skills`：查看可用的广告分析能力
+- `ad-query`：查询开心消消乐常规指标数据
 - `ad-dau`：分析广告投放对 DAU 的影响
 - `ad-anomaly-attribution`：分析留存、ROI、LTV、付费率等异常
 
@@ -42,7 +42,7 @@ MCP 是 Skills 调用外部能力的接口。本项目的 MCP 只负责原子操
 }
 ```
 
-- `skills_scope`：安装范围，默认是 `default`
+- `skills_scope`：安装范围，默认是 `default`，该字段不用手动添加
 - `username`：报告产出用户，可通过安装命令的 `--user` 设置
 - `data_fortress_platform_user`：数据堡垒认证账号
 - `data_fortress_aes_key`：数据堡垒 AES 秘钥

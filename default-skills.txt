@@ -5,4 +5,5 @@
 # 若要新增默认 skill，在本文件追加一行 skill 目录名即可。
 
 ad-dau
+ad-query
 ad-skills

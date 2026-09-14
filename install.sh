@@ -6,6 +6,7 @@ SOURCE_DIR="${AD_AGENT_SOURCE_DIR:-}"
 SKILLS_SRC=".agents/skills"
 MCP_SRC="mcp"
 SCRIPTS_SRC="scripts"
+KNOWLEDGE_SRC="knowledge"
 DEFAULT_LIST="default-skills.txt"
 CONFIG_FILE="config.json"
 TEMP_DIR=""
@@ -139,6 +140,15 @@ if [[ -d "$SOURCE_ROOT/$SCRIPTS_SRC" ]]; then
   mkdir -p "$SCRIPTS_SRC"
   cp -R "$SOURCE_ROOT/$SCRIPTS_SRC/"* "$SCRIPTS_SRC/"
   chmod +x "$SCRIPTS_SRC"/*.sh 2>/dev/null || true
+fi
+
+if [[ -d "$SOURCE_ROOT/$KNOWLEDGE_SRC" ]]; then
+  SOURCE_KNOWLEDGE_ROOT="$(cd "$SOURCE_ROOT/$KNOWLEDGE_SRC" && pwd)"
+  mkdir -p "$KNOWLEDGE_SRC"
+  TARGET_KNOWLEDGE_ROOT="$(cd "$KNOWLEDGE_SRC" && pwd)"
+  if [[ "$SOURCE_KNOWLEDGE_ROOT" != "$TARGET_KNOWLEDGE_ROOT" ]]; then
+    cp -R "$SOURCE_KNOWLEDGE_ROOT/." "$TARGET_KNOWLEDGE_ROOT/"
+  fi
 fi
 
 echo ""
