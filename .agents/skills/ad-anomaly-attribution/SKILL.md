@@ -3,7 +3,7 @@ name: ad-anomaly-attribution
 description: 当用户提出开心消消乐（简称 Animal）项目广告投放（买量）业务出现异常时（留存波动 / ROI 异常 / 翻倍异常 / LTV 异常 / 付费率异常），调用此 skill。
 ---
 
-在开始之前，请先阅读 `knowledge/sql_guidelines.md` 与 `knowledge/metric_definitions.md`。之后按下面流程进行 Animal 广告投放业务的异动归因，**自动完成全部流程，无需用户二次确认**。
+在开始之前，请先阅读 `knowledge/sql.md` 与 `knowledge/metrics.md`。之后按下面流程进行 Animal 广告投放业务的异动归因，**自动完成全部流程，无需用户二次确认**。
 
 本 Skill 负责全部业务编排、归因判断和报告数据组织。项目级 `ad_agent` MCP 只提供原子接口：通过 `ad_query` 按需查询数据，通过 `ad_render_report` 使用固定模板渲染，通过 `ad_upload_report` 上传本地报告并返回 URL。
 
@@ -13,7 +13,7 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 
 通过项目级 `ad_agent` MCP 的 `ad_query` 工具执行 SQL：传入 `sql`，需要时指定 `engine`、`wait`、`fetch_rows` 和 `output_name`。工具会自动提交查询、轮询进度、获取结果，把 CSV 返回给 AI，并保存到项目 `var/ad-agent/`。
 
-- **引擎**：默认 `trino_new`。SQL 必须符合 **Trino 语法**，详见 `knowledge/sql_guidelines.md`。复杂 SQL 可选 `tez_new` / `spark_on_ack`，并确保 SQL 写法符合对应引擎语法。
+- **引擎**：默认 `trino_new`。SQL 必须符合 **Trino 语法**，详见 `knowledge/sql.md`。复杂 SQL 可选 `tez_new` / `spark_on_ack`，并确保 SQL 写法符合对应引擎语法。
 - **动态分析**：根据前一轮结果决定是否继续查询，不要预设所有下钻 SQL 必须一次完成。
 
 ---
@@ -30,7 +30,7 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 | **LTV 异常**（N 日 LTV） | **不限新增设备**（含新增 + 回流） | 分母为新增 + 回流总量 |
 | **付费率异常**（N 日付费率） | **限定新增设备**（`new_equip = '1'`） | 分子分母都仅含新增 |
 
-> 指标完整定义、汇总表 ↔ 基础表口径映射、用户级下钻具体流程见 `knowledge/metric_definitions.md` 第二、三章。
+> 指标完整定义、汇总表 ↔ 基础表口径映射、用户级下钻具体流程见 `knowledge/metrics.md` 第二、三章。
 
 ---
 
@@ -73,7 +73,7 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 - **异常起点判定**：用户描述往往是粗略的（如"4 月开始异常"）。先拉异动指标的日级趋势，**精确判断异常起点的具体日期**，并检查起点**前后一段时间内是否有异常加剧**（先小幅波动后大幅恶化、二次反弹后再下跌等）。最终确定「异常期」用于 Step 2 归因。
 - **时间窗口**：异常期和基期**都不超过 1 个月**（半个月 / 1 周更佳）。例：异常期 4-1 ~ 4-15，基期取 3-1 ~ 3-31 即可，不要拉得更长。时间过长会引入历史趋势噪声、数据成熟度衰减，稀释异动信号。
 - 不涉及用户 ID，直接按广告维度分组聚合。
-- 严守强制约束（`ds = 昨天`、`install_date substr`、A/B 类维度处理、N 日成熟度等），详见 `knowledge/sql_guidelines.md` 第二章。
+- 严守强制约束（`ds = 昨天`、`install_date substr`、投放细分维度处理、N 日成熟度等），详见 `knowledge/sql.md` 第二章。
 
 ## Step 2 — 异动归因（基础表用户级下钻）
 
@@ -81,7 +81,7 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 
 **归因重点方向（三选一定位 / 可同时排查）**：
 
-1. **新老用户对比**（`user_type` ∈ `new` / `back`）：异动主要由全新用户还是回流老用户驱动？是判断流量结构变化最直接的切口。
+1. **新老用户对比**（`user_type` ∈ `new` / `back`）：明确按用户层级分析时只限制`user_type`，不额外限制`new_equip`；异动主要由全新用户还是回流老用户驱动？
 2. **闯关行为**（`stage_times` / `stage_true_times`）：闯关频次与过关率是 Animal 的核心游戏行为指标；留存 / 付费异动经常源自闯关数据异常（关卡难度调整、卡关现象等）。
 3. **前端流量变化**（CPI / ecpm / CTR / CVR / CTR\*CVR / 回流占新增比例）：异动是否来自媒体侧投放结构变化？例如 CPI 飙高、CTR 跳水、回流占比异常上升等，往往会直接传导到留存 / ROI / 付费率。
 4. 其他维度补充：付费分布、留存衰减曲线、活跃时长等。
@@ -91,7 +91,7 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 - **按第二章表格选择口径**（限 / 不限新增设备）。
 - 「先定人群，再算指标」：先用 `bi.animal_uid_ray_2026` 圈定用户范围（CTE / 子查询），再 join 付费 / 活跃 / 闯关表。
 - **禁止**汇总表与基础表 join。
-- 详细规则见 `knowledge/sql_guidelines.md` 第三章、`knowledge/metric_definitions.md` 3.1。
+- 详细规则见 `knowledge/sql.md` 第三章、`knowledge/metrics.md` 3.1。
 
 ## Step 3 — 报告输出与上传
 
@@ -140,7 +140,7 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 
 **通用规则**：
 - **全文中文**：所有文案、字段、维度、指标都用中文。**禁止直接显示英文字段名**（如 `media_cn_name` → 展示为「广告平台」），也**禁止任何英文术语 / 缩写 / 业务黑话**（如 fold、tag、ratio、roi 小写、d2、d7 这种）——LLM 必须把它们映射到 `metric_definitions.md` 里的中文指标名（如「翻倍系数」「关键行为标签」「次日留存率」「7 日 ROI」）。
-- **中文命名一致性**：指标 / 维度的中文名严格按 `knowledge/metric_definitions.md` 第二章 / 3.2 / 3.3 字典对应（例：「DN 留存率」「翻倍系数」「广告平台」「关键行为标签」「投放分类」「优化师」「广告账户」「子平台」等）。
+- **中文命名一致性**：指标 / 维度的中文名严格按 `knowledge/metrics.md` 第二章 / 3.2 / 3.3 字典对应（例：「DN 留存率」「翻倍系数」「广告平台」「关键行为标签」「投放分类」「优化师」「广告账户」「子平台」等）。
 - **报告章节直接显示主标题**（如「当前数据现状」），不要写成「第一部分：xxx」这种修饰语。
 
 ## 4.0 报告标题与元信息

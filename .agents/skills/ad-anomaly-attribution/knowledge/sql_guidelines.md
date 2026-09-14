@@ -32,7 +32,7 @@
 | 粒度 | 用户级明细 | 广告维度预聚合 |
 | 用户 ID | 有 | 无 |
 | `ds` 字段含义 | 事件发生日期，纯 `YYYY-MM-DD` | 快照产出日期，**必须 = 昨天**（C1） |
-| `ds` 是否分区键 | 是（与 `appid` 共同分区） | 是（**唯一**分区键，`appid` 非分区键） |
+| `ds` 是否分区键 | 是（与 `appid` 共同分区） | 是（与 `appid` 共同分区） |
 | 时间维度过滤 | 用 `ds` 范围 | 用 `install_date` 范围（**必须 substr**，C2） |
 | 维度字段处理 | 按真实值过滤 | A 类 = `'all'`，B 类按真实值（C3） |
 | 跨表 join | 按 `udid`/`user_id`/`uid` 关联 | **禁止**与基础表 join（U1） |
@@ -127,9 +127,9 @@ media_cn_name、report_type
 
 | 字段 | 类型 | 含义 | 约束 / 备注 |
 |---|---|---|---|
-| `ds` | string | 快照更新日期（**唯一分区键**） | **C1**：必须 `= '昨天'` |
+| `ds` | string | 快照更新日期（分区键） | **C1**：必须 `= '昨天'` |
 | `install_date` | string | 用户新增日期，`YYYY-MM-DD HH:mm:ss` | **C2**：必须 `substr(install_date, 1, 10)` |
-| `appid` | string | app 名称（**非**分区键） | 建议过滤，例 `'animal_h5cn_prod'` |
+| `appid` | string | app 名称（分区键） | 必须限制目标产品，例 `'animal_h5cn_prod'` |
 | `media_cn_name` | string | 广告平台，例 `腾讯广告`、`巨量引擎` | **C3 / B 类**：禁 `= 'all'` |
 | `report_type` | string | 用户来源类型，`ad` / `organic` | **C3 / B 类**：禁 `= 'all'`，广告分析默认 `= 'ad'` |
 | `data_tag_type` | string | 投放类型 | **C3 / A 类** |
@@ -221,8 +221,9 @@ Step 2：明细表 算指标
   闯关表 → 闯关率 / 难度
 ```
 
-> **分区强制规则**：所有基础表的 `where` 必须**同时**限定 `ds`（建议范围条件）与 `appid`，禁止全表扫描。
+> **分区强制规则**：所有基础表的 `where` 必须**同时**限定 `ds` 与 `appid`，禁止全表扫描。用户归因表的`ds`按用户新增日期范围限制；付费、活跃和闯关表的`ds`按行为发生日期范围限制。
 > **用户 ID 对应关系**：用户表 `udid` ≡ 付费表 `user_id` ≡ 活跃 / 闯关表 `uid`。
+> **通服规则**：用户归因表的`appid`用于圈定买入端；关联付费、活跃或闯关明细时，明细表的`appid`默认限制四端：`animal_androidcncm_prod`、`animal_ioscn_prod`、`animal_ohoscn_prod`、`animal_h5cn_prod`。只有用户明确指定行为端时，才限制明细表为单个`appid`。
 
 ### 3.2 表清单与字段
 
@@ -233,7 +234,7 @@ Step 2：明细表 算指标
 | 字段 | 类型 | 含义 | 示例 / 枚举值 |
 |---|---|---|---|
 | `ds` | string | 新增日期（分区键，纯 `YYYY-MM-DD`） | `2026-05-04` |
-| `appid` | string | app 名称（分区键） | `animal_h5cn_prod` |
+| `appid` | string | 归因端产品（分区键） | `animal_h5cn_prod`等用户买入端 |
 | `udid` | string | 用户 ID | — |
 | `report_type` | string | 用户来源 | `ad`（广告量）、`organic`（自然量） |
 | `new_equip` | string | 新老设备 | `1` 新设备、`0` 老设备 |
@@ -254,7 +255,7 @@ Step 2：明细表 算指标
 | 字段 | 类型 | 含义 | 示例 |
 |---|---|---|---|
 | `ds` | string | 付费日期（分区键） | `2026-05-04` |
-| `appid` | string | app 名称（分区键） | `animal_h5cn_prod` |
+| `appid` | string | 行为发生端产品（分区键） | 默认使用四端范围 |
 | `user_id` | string | 用户 ID（= 用户表 `udid`） | — |
 | `pay_amount_cny` | double | 付费金额（**毛收入**，元） | `10` |
 | `pay_type` | string | 支付来源 | — |
@@ -274,7 +275,7 @@ left join dm_ad.dim_et_custom_pay_da dim
     and lower(a.platform) = lower(dim.platform)               -- 必须 lower
     and a.ds between dim.start_date and dim.stop_date         -- 维表生效区间
 where a.ds >= '2026-01-01'
-  and a.appid = 'animal_h5cn_prod'
+  and a.appid in ('animal_androidcncm_prod', 'animal_ioscn_prod', 'animal_ohoscn_prod', 'animal_h5cn_prod')
 ```
 
 要点：
@@ -289,7 +290,7 @@ where a.ds >= '2026-01-01'
 | 字段 | 类型 | 含义 | 示例 |
 |---|---|---|---|
 | `ds` | string | 活跃日期（分区键） | `2026-05-04` |
-| `appid` | string | app 名称（分区键） | `animal_h5cn_prod` |
+| `appid` | string | 行为发生端产品（分区键） | 默认使用四端范围 |
 | `uid` | string | 用户 ID（= 用户表 `udid`） | — |
 
 **强制规则**：必须按 `ds`、`appid`、`uid` 去重（如 `select distinct ...`），否则数据重复。
@@ -301,7 +302,7 @@ where a.ds >= '2026-01-01'
 | 字段 | 类型 | 含义 | 示例 |
 |---|---|---|---|
 | `ds` | string | 闯关日期（分区键） | `2026-05-04` |
-| `appid` | string | app 名称（分区键） | `animal_h5cn_prod` |
+| `appid` | string | 行为发生端产品（分区键） | 默认使用四端范围 |
 | `uid` | string | 用户 ID（= 用户表 `udid`） | — |
 | `stage_times` | int | 当日闯关总次数 | `10` |
 | `stage_true_times` | int | 当日过关总次数 | `4` |
@@ -316,7 +317,7 @@ with target_users as (
     select udid, ds as install_date            -- 基础表 ds 是纯 YYYY-MM-DD，无需 substr
     from bi.animal_uid_ray_2026
     where ds between '2026-05-01' and '2026-05-04'
-      and appid         = 'animal_h5cn_prod'
+      and appid in ('animal_androidcncm_prod', 'animal_ioscn_prod', 'animal_ohoscn_prod', 'animal_h5cn_prod')
       and report_type   = 'ad'
       and new_equip     = '1'
       and media_cn_name = '腾讯广告'
@@ -326,7 +327,7 @@ day2_active as (
     select distinct uid, ds                    -- 活跃表必须去重
     from dw_dp.dwd_dp_login_user_active_mid_v2_di
     where ds between '2026-05-02' and '2026-05-05'
-      and appid = 'animal_h5cn_prod'
+      and appid in ('animal_androidcncm_prod', 'animal_ioscn_prod', 'animal_ohoscn_prod', 'animal_h5cn_prod')
 )
 select
     u.install_date,
