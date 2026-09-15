@@ -71,7 +71,7 @@
 
 | 物理表 | 主要字段 | 指标能力与口径 |
 |---|---|---|
-| `dm_ad.app_et_ad_cost_report_da` | `discounted_cost_cny`、`cost_cny`、`impression`、`click`、`reserve`、`month_discounted_cost_cny` | 媒体折后成本、媒体源成本、曝光、点击、预约、当月折后成本 |
+| `dm_ad.app_et_ad_cost_report_da` | `discounted_cost_cny`、`cost_cny`、`impression`、`click`、`reserve` | 媒体折后成本、媒体源成本、曝光、点击、预约 |
 | `dm_ad.app_et_ad_equip_new_da` | `all_new_equip_total`、`real_name_equip_total`、`stand_by_cost` | 新增设备、实名新增设备、固定成本 |
 | `dm_ad.app_et_ad_equip_back_da` | `back_equip_total` | 回流设备，仅适用于广告量相关展现类型 |
 | `dm_ad.app_et_ad_firstday_da` | `new_udid_online_min`、`new_udid_login_day1`~`new_udid_login_day4`、`new_udid_dd1_2`、`new_udid_dd1_10`、`new_udid_dd3_2`、`new_udid_dd3_10` | 新增设备首日在线时长、登录和等级行为 |
@@ -79,8 +79,8 @@
 | `dm_ad.app_et_ad_pay_num_da` | `new_udid_pay_num_day{N}`、`new_udid_pay_num_tonow`、`new_udid_passs_stage_pay_num_day1` | 新增设备N日累计付费设备数、截至当前付费设备数、首日过关付费设备数 |
 | `dm_ad.app_et_ad_revenue_da` | `new_udid_revenue_cny_day{N}`、`new_udid_revenue_cny_tonow` | 新增设备N日累计收入及截至当前收入 |
 | `dm_ad.app_et_ad_back_revenue_da` | `back_udid_revenue_cny_day{N}`、`back_udid_revenue_cny_tonow` | 回流设备N日累计收入及截至当前收入，仅适用于广告量 |
-| `dm_ad.app_et_ad_custom_revenue_da` | `new_udid_revenue_cny_day{N}`、`new_udid_revenue_cny_tonow`、`new_udid_custom_revenue_cny_tonow`、`month_new_udid_revenue_cny_day{N}`、`new_equip_new_user_revenue_cny_day1`、`new_equip_back_user_revenue_cny_day1` | 新增设备N日累计净收入、截至当前净收入、当月净收入及新老用户拆分收入 |
-| `dm_ad.app_et_ad_back_custom_revenue_da` | `back_udid_revenue_cny_day{N}`、`back_udid_revenue_cny_tonow`、`back_udid_custom_revenue_cny_tonow`、`month_back_udid_revenue_cny_day{N}`、`old_equip_new_user_revenue_cny_day1`、`old_equip_back_user_revenue_cny_day1` | 回流设备N日累计净收入、截至当前净收入、当月净收入及新老用户拆分收入，仅适用于广告量 |
+| `dm_ad.app_et_ad_custom_revenue_da` | `new_udid_revenue_cny_day{N}`、`new_udid_revenue_cny_tonow`、`new_udid_custom_revenue_cny_tonow`、`new_equip_new_user_revenue_cny_day1`、`new_equip_back_user_revenue_cny_day1` | 新增设备N日累计净收入、截至当前净收入及新老用户拆分收入 |
+| `dm_ad.app_et_ad_back_custom_revenue_da` | `back_udid_revenue_cny_day{N}`、`back_udid_revenue_cny_tonow`、`back_udid_custom_revenue_cny_tonow`、`old_equip_new_user_revenue_cny_day1`、`old_equip_back_user_revenue_cny_day1` | 回流设备N日累计净收入、截至当前净收入及新老用户拆分收入，仅适用于广告量 |
 | `dm_ad.app_et_ad_pay_amount_da` | `new_udid_pay_cny_day{N}`、`new_udid_pay_cny_tonow` | 新增设备N日累计内购收入及截至当前内购收入 |
 | `dm_ad.app_et_ad_back_pay_amount_da` | `back_udid_pay_cny_day{N}`、`back_udid_pay_cny_tonow` | 回流设备N日累计内购收入及截至当前内购收入，仅适用于广告量 |
 | `dm_ad.app_et_ad_advmon_pay_da` | `new_udid_advmon_cny_day{N}`、`new_udid_advmon_cny_tonow` | 新增设备N日累计变现收入及截至当前变现收入 |
@@ -173,6 +173,7 @@
 | `pay_amount_cny` | 人民币支付金额 | 毛收入基础字段 |
 | `pay_amount`、`currency` | 原币支付金额和币种 | 需要原币分析时使用；人民币指标优先使用 `pay_amount_cny` |
 | `pay_type`、`pay_unit`、`goods_id` | 支付类型、支付单位、商品ID | 支付类型或商品拆分 |
+| `platform` | 支付平台 | 与内购分成比例表的 `platform` 匹配；匹配时两侧使用 `LOWER()` |
 | `order_id` | 订单ID | 订单去重或订单级分析 |
 | `role_id` | 角色ID | 角色级分析 |
 | `ds` | 付费事件分区日期 | 必须限制在目标付费日期范围内 |
@@ -212,8 +213,8 @@
 | 字段 | 含义 | 使用规则 |
 |---|---|---|
 | `appid` | 产品标识 | 与付费明细的 `appid` 匹配 |
-| `pay_type`、`platform`、`node` | 支付类型、平台和节点 | 与付费明细对应维度匹配 |
-| `base_rate`、`sharing_rate`、`rate` | 内购分成比例 | 净收入通常使用 `pay_amount_cny * rate` |
+| `pay_type`、`platform` | 支付类型、支付平台 | 与付费明细对应维度匹配 |
+| `rate` | 内购分成比例 | 净收入使用 `a.pay_amount_cny * coalesce(dim.rate, 1)` |
 | `start_date`、`stop_date` | 换算比例生效区间 | 按付费时间匹配有效区间 |
 
 ### 明细表关联规则
@@ -224,6 +225,6 @@
 - 每张有分区的表都必须同时限制 `ds` 和 `appid`。`全量快照`表固定使用`ds=昨天`；付费、活跃和闯关等`日增量明细`表按目标事件日期范围限制`ds`；用户归因表按用户新增日期范围限制`ds`。日期字段筛选不能替代分区条件。
 - 留存按活跃表 `ds` 与新增日期的日期差计算；N日留存使用新增日期后第N-1天的活跃记录。
 - 付费率和付费设备数按去重后的 `user_id` 统计，不能直接按订单行数统计设备数。
-- 用户级净收入使用 `pay_amount_cny * rate`，并按 `appid`、`pay_type`、`platform`、有效生效日期区间匹配内购分成比例表；无法确认匹配条件时先询问。
+- 用户级净收入使用付费明细`a LEFT JOIN dm_ad.dim_et_custom_pay_da dim`。关联条件为`a.appid = dim.appid`、`lower(a.pay_type) = lower(dim.pay_type)`、`lower(a.platform) = lower(dim.platform)`及`a.ds between dim.start_date and dim.stop_date`；计算表达式为`a.pay_amount_cny * coalesce(dim.rate, 1)`。不得改为内连接，未匹配维表时按分成比例1计算。
 - 用户级查询中，先在用户归因表去重，再关联付费、活跃或闯关明细，避免一对多JOIN造成设备数和收入重复。
 - 汇总表已经聚合到展现类型、投放维度和新增日期粒度，不与用户级明细表直接关联。
