@@ -68,10 +68,10 @@
 ## 6. 用户级明细关联
 
 - 用户归因、付费、活跃和闯关明细表均需限制 `ds` 与 `appid`。归因表按新增日期限制 `ds`，行为明细表按事件日期限制 `ds`。
-- 先在 `bi.animal_uid_ray_2026` 圈定并去重用户，再关联明细表。用户 ID 默认关系为：归因表 `udid` = 付费表 `user_id` = 活跃表 `uid` = 闯关表 `uid`。
-- 游戏通服时，归因表 `appid`表示买入端；付费、活跃和闯关明细默认使用四端产品范围。只有用户明确指定行为发生端时，才限制明细表为单个 `appid`。
-- 付费设备数和付费率按去重后的 `user_id` 统计，不能按订单行数统计；存在一对多关系时先在用户或订单粒度去重。
-- 活跃日使用活跃表 `ds`；付费事件日使用 `paytime` 截取日期；留存日按新增日期与活跃日期的差计算。
+- 先在 `bi.animal_uid_ray_2026` 圈定归因周期，再关联明细表。归因记录至少按 `ds + udid` 去重，不能在整个查询时间范围内只按 `udid` 全局去重，因为同一设备可能流失后再次回流。用户 ID 默认关系为：归因表 `udid` = 付费表 `user_id` = 活跃表 `uid` = 闯关表 `uid`。
+- Animal 采用通服归因：归因表 `appid`表示买入端；付费、活跃和闯关明细默认使用四端产品范围。只有用户明确指定行为发生端时，才限制明细表为单个 `appid`。
+- 付费设备数和付费率的分子按归因设备去重统计，不能按订单行数统计；无需先对付费、活跃或闯关明细表做全表去重。具体指标公式以 `metrics.md` 为准。
+- 活跃日和付费事件日均使用对应明细表的 `ds`；需要精确到时分秒时，付费表使用 `server_time`。留存日按归因周期的新增日期与活跃日期的差计算。关联活跃、付费和闯关明细时，行为日期必须满足 `>= install_date` 且 `< stop_date`，其中 `stop_date` 是下一次回流的 `install_date`。
 - 用户明确说`新用户`、`老用户`或`回流用户`时，只限制 `user_type`，不限制 `new_equip`。只说`新增`、`新增设备`或`回流设备`时，只限制 `new_equip`，不限制 `user_type`。两类条件不能互相替代。
 - 只分析新增设备时，用户归因表使用 `report_type='ad' AND new_equip='1'`；分析新增和回流整体时，不限制 `new_equip`。
 - 用户级净收入使用付费明细`a LEFT JOIN dm_ad.dim_et_custom_pay_da dim`，按 `appid`、`LOWER(pay_type)`、`LOWER(platform)` 和生效日期区间匹配；净收入为 `a.pay_amount_cny * COALESCE(dim.rate, 1)`。必须使用左连接，未匹配分成比例时按1计算。
@@ -162,7 +162,7 @@ LEFT JOIN dm_ad.dim_et_custom_pay_da dim
 
 ```sql
 WITH attributed AS (
-    SELECT DISTINCT udid
+    SELECT DISTINCT ds AS install_date, udid, stop_date
     FROM bi.animal_uid_ray_2026
     WHERE ds BETWEEN '${install_start_date}' AND '${install_end_date}'
       AND appid = '${attribution_appid}'
@@ -172,5 +172,7 @@ FROM attributed u
 JOIN payment_detail p
   ON u.udid = p.user_id
 WHERE p.ds BETWEEN '${event_start_date}' AND '${event_end_date}'
+  AND p.ds >= u.install_date
+  AND p.ds < u.stop_date
   AND p.appid IN ('${app_appid}', '${h5_appid}');
 ```

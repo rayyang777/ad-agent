@@ -89,7 +89,7 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 **执行规则**：
 
 - **按第二章表格选择口径**（限 / 不限新增设备）。
-- 「先定人群，再算指标」：先用 `bi.animal_uid_ray_2026` 圈定用户范围（CTE / 子查询），再 join 付费 / 活跃 / 闯关表。
+- 「先定归因周期，再算指标」：先用 `bi.animal_uid_ray_2026` 按`ds + udid`圈定归因周期（CTE / 子查询），再 join 付费 / 活跃 / 闯关表；行为日期必须满足`>= install_date`且`< stop_date`，禁止跨整个时间范围只按`udid`去重。
 - **禁止**汇总表与基础表 join。
 - 详细规则见 `knowledge/sql.md` 第三章、`knowledge/metrics.md` 3.1。
 

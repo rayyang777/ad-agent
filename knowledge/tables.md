@@ -40,9 +40,9 @@
 
 ## 每日汇总表
 
-每日汇总表按展现类型、投放维度和新增日期预聚合，可覆盖广告量、自然量、测试量和直拉等展现类型，但每张表的实际支持范围可能不同。APP端未明确关键行为时优先从每日汇总表取数；如果指定维度不受每日汇总表支持，改用用户级明细表。H5端优先从关键行为汇总表取数；如果目标指标或维度不受关键行为表支持，可改用每日汇总表或用户级明细表。APP端查询广告成本时，还必须从新增设备表读取固定成本，与成本与媒体表的媒体折后成本分别聚合后相加；H5端不读取固定成本。该组表的`ds读取类型`均为`全量快照`，固定使用`ds=昨天`，新增日期使用`substr(install_date, 1, 10)`筛选。完整路由规则按`sql.md`执行。
+每日汇总表按展现类型、投放维度和新增日期预聚合，可覆盖广告量、自然量、测试量和直拉等展现类型，但每张表的实际支持范围可能不同。APP端未明确关键行为时优先从每日汇总表取数；H5端优先从关键行为汇总表取数；目标指标或维度不受优先表支持时，可改用其他汇总表或用户级明细表。APP端查询广告成本时，还必须从新增设备表读取固定成本，与成本与媒体表的媒体折后成本分别聚合后相加；H5端不读取固定成本。该组表的`ds读取类型`均为`全量快照`，固定使用`ds=昨天`，新增日期使用`substr(install_date, 1, 10)`筛选。完整路由规则按`sql.md`执行。
 
-汇总表能够查询但目标指标没有数据时，不能直接返回空结果。应先检查分区、产品、展现类型、维度过滤和指标成熟度，再回查支持同一口径的用户级明细表，避免将底层数据未更新误判为业务指标为空。
+汇总表能够查询但目标指标没有数据时，不能直接返回空结果。应按`sql.md`检查查询条件，并依次尝试其他支持同一口径的汇总表和用户级明细表，避免将底层数据未更新误判为业务指标为空。
 
 ### 业务维度与物理字段
 
@@ -157,7 +157,7 @@
 | `supplier_name` | 投放分类 | 仅在用户问题指定时使用 |
 | `optimizer_user` | 优化师 | 仅在用户问题指定时使用 |
 | `real_name` | 实名状态 | 实名相关分析 |
-| `stop_date` | 归因或用户失效日期 | 只有用户问题明确涉及终止/失效时间时使用 |
+| `stop_date` | 当前归因周期的结束日期，等于该设备下一次回流的 `install_date` | 关联活跃、付费、闯关等行为时必须使用右开区间：行为日期 `>= install_date` 且 `< stop_date` |
 | `ds` | 用户新增日期分区 | 按用户新增日期范围限制，不固定为昨天 |
 | `appid` | 归因端产品分区 | 限制为用户被买入或归因的目标端 |
 
@@ -169,7 +169,7 @@
 |---|---|---|
 | `user_id` | 付费用户ID | 默认与用户归因表 `udid` 关联 |
 | `udid` | 付费事件中的设备标识 | 不是默认用户关联键，除非业务明确要求按设备关联 |
-| `paytime` | 付费时间 | 付费事件时间，按日期截取后用于时间窗口筛选 |
+| `server_time` | 付费数据采集时间 | 日级筛选和分区条件优先使用付费表 `ds`，需要精确到时分秒时使用 |
 | `pay_amount_cny` | 人民币支付金额 | 毛收入基础字段 |
 | `pay_amount`、`currency` | 原币支付金额和币种 | 需要原币分析时使用；人民币指标优先使用 `pay_amount_cny` |
 | `pay_type`、`pay_unit`、`goods_id` | 支付类型、支付单位、商品ID | 支付类型或商品拆分 |
@@ -177,7 +177,7 @@
 | `order_id` | 订单ID | 订单去重或订单级分析 |
 | `role_id` | 角色ID | 角色级分析 |
 | `ds` | 付费事件分区日期 | 必须限制在目标付费日期范围内 |
-| `appid` | 行为发生端产品分区 | 通服分析默认限制四端：`animal_androidcncm_prod`、`animal_ioscn_prod`、`animal_ohoscn_prod`、`animal_h5cn_prod`；只有用户明确指定行为端时才限制单个产品 |
+| `appid` | 行为发生端产品分区 | Animal 采用通服归因，默认限制四端：`animal_androidcncm_prod`、`animal_ioscn_prod`、`animal_ohoscn_prod`、`animal_h5cn_prod`；只有用户明确指定行为端时才限制单个产品 |
 
 ### 活跃明细表
 
@@ -192,7 +192,7 @@
 | `user_platform`、`sub_platform`、`game_version`、`network_type`、`device_model`、`os_version` | 活跃设备和环境信息 | 仅在用户问题指定时使用 |
 | `is_valid_uid`、`is_valid_udid`、`is_old_user` | 用户/设备有效性和新老标识 | 需要排除无效记录或拆分新老用户时使用 |
 | `ds` | 活跃日期分区 | 必须限制在目标活跃日期范围内；留存日按新增日期与目标活跃日关联 |
-| `appid` | 行为发生端产品分区 | 通服分析默认限制四端：`animal_androidcncm_prod`、`animal_ioscn_prod`、`animal_ohoscn_prod`、`animal_h5cn_prod`；只有用户明确指定行为端时才限制单个产品 |
+| `appid` | 行为发生端产品分区 | Animal 采用通服归因，默认限制四端：`animal_androidcncm_prod`、`animal_ioscn_prod`、`animal_ohoscn_prod`、`animal_h5cn_prod`；只有用户明确指定行为端时才限制单个产品 |
 
 ### 闯关明细表
 
@@ -204,7 +204,7 @@
 | `stage_times` | 关卡行为次数 | 按用户、关卡或日期汇总 |
 | `stage_true_times` | 有效关卡行为次数 | 业务指标明确要求有效次数时使用 |
 | `ds` | 闯关事件日期分区 | 必须限制在目标事件日期范围内 |
-| `appid` | 行为发生端产品分区 | 通服分析默认限制四端：`animal_androidcncm_prod`、`animal_ioscn_prod`、`animal_ohoscn_prod`、`animal_h5cn_prod`；只有用户明确指定行为端时才限制单个产品 |
+| `appid` | 行为发生端产品分区 | Animal 采用通服归因，默认限制四端：`animal_androidcncm_prod`、`animal_ioscn_prod`、`animal_ohoscn_prod`、`animal_h5cn_prod`；只有用户明确指定行为端时才限制单个产品 |
 
 ### 内购分成比例表
 
@@ -216,15 +216,3 @@
 | `pay_type`、`platform` | 支付类型、支付平台 | 与付费明细对应维度匹配 |
 | `rate` | 内购分成比例 | 净收入使用 `a.pay_amount_cny * coalesce(dim.rate, 1)` |
 | `start_date`、`stop_date` | 换算比例生效区间 | 按付费时间匹配有效区间 |
-
-### 明细表关联规则
-
-- 通服关联时，先用用户归因表的`appid`圈定买入端，再用用户ID关联付费、活跃或闯关明细。明细表记录的是行为发生端，默认使用四端`appid`范围，不能只使用归因端`appid`。
-- 先在用户归因表圈定人群，再关联明细表；不要先关联全量付费或活跃明细再过滤用户。
-- 用户ID默认关系：`bi.animal_uid_ray_2026.udid = dw_dp.dwd_dp_payment_success_basic_di.user_id = dw_dp.dwd_dp_login_user_active_mid_v2_di.uid = bi.animal_stage_ray_2026.uid`。
-- 每张有分区的表都必须同时限制 `ds` 和 `appid`。`全量快照`表固定使用`ds=昨天`；付费、活跃和闯关等`日增量明细`表按目标事件日期范围限制`ds`；用户归因表按用户新增日期范围限制`ds`。日期字段筛选不能替代分区条件。
-- 留存按活跃表 `ds` 与新增日期的日期差计算；N日留存使用新增日期后第N-1天的活跃记录。
-- 付费率和付费设备数按去重后的 `user_id` 统计，不能直接按订单行数统计设备数。
-- 用户级净收入使用付费明细`a LEFT JOIN dm_ad.dim_et_custom_pay_da dim`。关联条件为`a.appid = dim.appid`、`lower(a.pay_type) = lower(dim.pay_type)`、`lower(a.platform) = lower(dim.platform)`及`a.ds between dim.start_date and dim.stop_date`；计算表达式为`a.pay_amount_cny * coalesce(dim.rate, 1)`。不得改为内连接，未匹配维表时按分成比例1计算。
-- 用户级查询中，先在用户归因表去重，再关联付费、活跃或闯关明细，避免一对多JOIN造成设备数和收入重复。
-- 汇总表已经聚合到展现类型、投放维度和新增日期粒度，不与用户级明细表直接关联。

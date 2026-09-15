@@ -208,7 +208,7 @@ order by substr(install_date, 1, 10), media_cn_name;
 
 ### 3.1 工作流：先定人群，再算指标
 
-基础表 = 用户级明细，无任何预聚合。**必须**先在用户表圈定人群（CTE / 子查询），再去关联付费 / 活跃 / 闯关表算指标，**不要**把人群筛选条件直接写进指标计算 SQL。
+基础表 = 用户级明细，无任何预聚合。**必须**先在用户表按归因周期圈定人群（CTE / 子查询），再去关联付费 / 活跃 / 闯关表算指标，**不要**把人群筛选条件直接写进指标计算 SQL。同一设备可能流失后再次回流，用户表至少按`ds + udid`去重，禁止在整个查询时间范围内只按`udid`去重。
 
 ```
 Step 1：用户表 圈定人群（CTE）
@@ -224,6 +224,7 @@ Step 2：明细表 算指标
 > **分区强制规则**：所有基础表的 `where` 必须**同时**限定 `ds` 与 `appid`，禁止全表扫描。用户归因表的`ds`按用户新增日期范围限制；付费、活跃和闯关表的`ds`按行为发生日期范围限制。
 > **用户 ID 对应关系**：用户表 `udid` ≡ 付费表 `user_id` ≡ 活跃 / 闯关表 `uid`。
 > **通服规则**：用户归因表的`appid`用于圈定买入端；关联付费、活跃或闯关明细时，明细表的`appid`默认限制四端：`animal_androidcncm_prod`、`animal_ioscn_prod`、`animal_ohoscn_prod`、`animal_h5cn_prod`。只有用户明确指定行为端时，才限制明细表为单个`appid`。
+> **归因周期规则**：`stop_date`是同一设备下一次回流的`install_date`。行为日期必须满足`>= install_date`且`< stop_date`，不能把行为归入错误的新增或回流周期。
 
 ### 3.2 表清单与字段
 
@@ -239,6 +240,7 @@ Step 2：明细表 算指标
 | `report_type` | string | 用户来源 | `ad`（广告量）、`organic`（自然量） |
 | `new_equip` | string | 新老设备 | `1` 新设备、`0` 老设备 |
 | `user_type` | string | 新老用户 | `new`、`back` |
+| `stop_date` | string | 当前归因周期结束日期 | 下一次回流的`install_date`；关联行为明细时必须作为右开边界 |
 | `platform` | string | H5用户来源平台 | `wechatgame`、`douyin_game` |
 | `media_cn_name` | string | 广告平台 | `腾讯广告`、`巨量引擎` |
 | `data_tag` | string | H5关键行为标签 | `注册首日付费ROI` |
@@ -314,7 +316,7 @@ where a.ds >= '2026-01-01'
 ```sql
 -- Step 1：圈定用户范围
 with target_users as (
-    select udid, ds as install_date            -- 基础表 ds 是纯 YYYY-MM-DD，无需 substr
+    select distinct ds as install_date, udid, stop_date
     from bi.animal_uid_ray_2026
     where ds between '2026-05-01' and '2026-05-04'
       and appid in ('animal_androidcncm_prod', 'animal_ioscn_prod', 'animal_ohoscn_prod', 'animal_h5cn_prod')
@@ -339,6 +341,8 @@ from target_users u
 left join day2_active d
     on  u.udid = d.uid
     and date_add('day', 1, date(u.install_date)) = date(d.ds)   -- Trino 风格的日期加减
+    and d.ds >= u.install_date
+    and d.ds < u.stop_date
 group by u.install_date
 order by u.install_date;
 ```
