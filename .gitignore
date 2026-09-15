@@ -14,6 +14,6 @@ __pycache__/
 # BEGIN ad-agent local files
 /.codex/config.toml
 /.venv/
-/var/
+/reports/
 /config.json
 # END ad-agent local files

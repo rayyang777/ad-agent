@@ -11,7 +11,7 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 
 # 一、查询工具
 
-通过项目级 `ad_agent` MCP 的 `ad_query` 工具执行 SQL：传入 `sql`，需要时指定 `engine`、`wait`、`fetch_rows` 和 `output_name`。工具会自动提交查询、轮询进度、获取结果，把 CSV 返回给 AI，并保存到项目 `var/ad-agent/`。
+通过项目级 `ad_agent` MCP 的 `ad_query` 工具执行 SQL：传入 `sql`，需要时指定 `engine`、`wait`、`fetch_rows` 和 `output_name`。工具会自动提交查询、轮询进度、获取结果，把 CSV 返回给 AI，并将临时结果交由 MCP 管理。
 
 - **引擎**：默认 `trino_new`。SQL 必须符合 **Trino 语法**，详见 `knowledge/sql.md`。复杂 SQL 可选 `tez_new` / `spark_on_ack`，并确保 SQL 写法符合对应引擎语法。
 - **动态分析**：根据前一轮结果决定是否继续查询，不要预设所有下钻 SQL 必须一次完成。

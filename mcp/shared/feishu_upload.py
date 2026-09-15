@@ -6,7 +6,7 @@
 
 Usage:
   .venv/bin/python mcp/shared/feishu_upload.py \
-      --file var/ad-agent/report.html \
+      --file reports/report.html \
       --upload-name "Animal 广告分析报告 - 2026-05-13.html"
 
 Feishu config is read from project-root config.json:

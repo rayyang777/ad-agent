@@ -16,7 +16,7 @@ if ! "$PYTHON_CMD" -c 'import sys; raise SystemExit(sys.version_info < (3, 9))';
   exit 1
 fi
 
-mkdir -p "$PROJECT_ROOT/.codex" "$PROJECT_ROOT/var/ad-agent"
+mkdir -p "$PROJECT_ROOT/.codex" "$PROJECT_ROOT/reports"
 
 if [[ ! -x "$VENV_DIR/bin/python" ]]; then
   echo ">>> Creating project Python environment ..."

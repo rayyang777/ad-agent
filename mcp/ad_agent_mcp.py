@@ -7,6 +7,7 @@ import datetime as dt
 import json
 import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -17,20 +18,33 @@ from shared.sql_query import DEFAULT_FETCH_ROWS, DataFortressClient, required_co
 from shared.report_renderer import render_report
 
 ROOT = Path(os.environ.get("AD_AGENT_HOME", Path(__file__).resolve().parents[1])).expanduser().resolve()
-RUNTIME_DIR = Path(os.environ.get("AD_AGENT_RUNTIME_DIR", ROOT / "var" / "ad-agent")).expanduser().resolve()
-DEBUG_LOG = RUNTIME_DIR / "mcp-debug.log"
+TEMP_DIR = Path(tempfile.gettempdir()) / "ad-agent"
+REPORT_DIR = ROOT / "reports"
+DEBUG_LOG = TEMP_DIR / "mcp-debug.log"
+TEMP_FILE_TTL = dt.timedelta(days=7)
 SUPPORTED_PROTOCOL_VERSIONS = {"2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07"}
 LATEST_PROTOCOL_VERSION = "2025-11-25"
 ALLOWED_ENGINES = {"trino_new", "tez_new", "spark_on_ack", "presto", "tez"}
 
 def debug_log(message: str) -> None:
     try:
-        RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
+        TEMP_DIR.mkdir(parents=True, exist_ok=True)
         if DEBUG_LOG.exists() and DEBUG_LOG.stat().st_size > 1024 * 1024:
             DEBUG_LOG.unlink()
         with DEBUG_LOG.open("a", encoding="utf-8") as handle:
             handle.write(f"{dt.datetime.now().isoformat(timespec='seconds')} {message}\n")
     except Exception:
+        pass
+
+def cleanup_temp_dir() -> None:
+    try:
+        if not TEMP_DIR.is_dir():
+            return
+        cutoff = dt.datetime.now().timestamp() - TEMP_FILE_TTL.total_seconds()
+        for path in TEMP_DIR.iterdir():
+            if path.is_file() and path.stat().st_mtime < cutoff:
+                path.unlink()
+    except OSError:
         pass
 
 def read_message() -> dict[str, Any] | None:
@@ -125,8 +139,8 @@ def write_query_csv(query_id: str, arguments: dict[str, Any], client: DataFortre
     max_chars = int(arguments.get("max_chars") or 200000)
     if not 1 <= max_chars <= 200000:
         raise ValueError("max_chars must be between 1 and 200000")
-    output_path = RUNTIME_DIR / safe_name(arguments.get("output_name"), "query.csv")
-    RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
+    output_path = TEMP_DIR / safe_name(arguments.get("output_name"), "query.csv")
+    TEMP_DIR.mkdir(parents=True, exist_ok=True)
     columns, rows = client.fetch_rows(query_id, fetch_rows=read_fetch_rows(arguments))
     write_csv(output_path, columns, rows)
     csv_text = output_path.read_text(encoding="utf-8")
@@ -203,7 +217,7 @@ def ad_query_result(arguments: dict[str, Any]) -> dict[str, Any]:
 
 def ad_render_report(arguments: dict[str, Any]) -> dict[str, Any]:
     """Render one allowlisted skill template from schema-validated report data."""
-    return render_report(ROOT, RUNTIME_DIR, arguments, config=load_project_config())
+    return render_report(ROOT, REPORT_DIR, arguments, config=load_project_config())
 
 def ad_upload_report(arguments: dict[str, Any]) -> dict[str, Any]:
     """Upload an existing local HTML report; never renders a report."""
@@ -279,6 +293,7 @@ def handle(request: dict[str, Any]) -> None:
             respond(request_id, error={"code": -32000, "message": str(exc)})
 
 def main() -> None:
+    cleanup_temp_dir()
     debug_log("server starting")
     while (message := read_message()) is not None:
         handle(message)

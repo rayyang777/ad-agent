@@ -80,7 +80,7 @@ H5 作为独立端口出现时，在用户提到 H5 的位置按 `H5 → douyin_
 
 - 报告标题：`Animal 广告买量对 DAU 影响分析 - <后缀>`。后缀按标题标签用 `/` 拼接；全端直接写 `全端`。
 - 上传文件名由 `ad_upload_report` 根据报告标题和日期自动生成：`<REPORT_TITLE> - <TODAY>.html`。标题中的 `/` 自动替换为 `、`，不要传 `upload_name` 覆盖。
-- 调用 `ad_render_report` 时，`local_name` 使用 `ad-dau-report.html`。本地路径由 MCP 管理，不自行创建缓存目录。
+- 调用 `ad_render_report` 时，`local_name` 使用 `ad-dau-report.html`。本地报告路径由 MCP 管理，不自行创建目录。
 
 ---
 
