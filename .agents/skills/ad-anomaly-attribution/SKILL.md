@@ -3,7 +3,15 @@ name: ad-anomaly-attribution
 description: 当用户提出开心消消乐（简称 Animal）项目广告投放（买量）业务出现异常时（留存波动 / ROI 异常 / 翻倍异常 / LTV 异常 / 付费率异常），调用此 skill。
 ---
 
-在开始之前，请先阅读 `knowledge/sql.md` 与 `knowledge/metrics.md`。之后按下面流程进行 Animal 广告投放业务的异动归因，**自动完成全部流程，无需用户二次确认**。
+在开始之前，先阅读项目根目录的共享知识库：
+
+- `knowledge/project.md`：产品端、`appid` 和用户归因；
+- `knowledge/metrics.md`：指标名称、公式、人群口径和成熟度；
+- `knowledge/tables.md`：表能力、字段、粒度和维度字段映射；
+- `knowledge/sql.md`：选表、过滤、聚合、明细关联和 SQL 约束；
+- `knowledge/dimensions.md`：维度、简称和规范值。
+
+根目录 `knowledge/` 是表、指标、维度和 SQL 规范的唯一知识来源；本 Skill 只负责异动归因的业务编排、判断和报告组织。按下面流程自动完成分析，除非关键信息缺失或存在多个无法判定的候选，不要要求用户二次确认。
 
 本 Skill 负责全部业务编排、归因判断和报告数据组织。项目级 `ad_agent` MCP 只提供原子接口：通过 `ad_query` 按需查询数据，通过 `ad_render_report` 使用固定模板渲染，通过 `ad_upload_report` 上传本地报告并返回 URL。
 
@@ -20,17 +28,7 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 
 # 二、支持的异动类型与口径
 
-本 skill 覆盖以下 5 类异动；不同异动在**用户级下钻**（基础表）时口径不同，**生成 SQL 前必须先按此表定口径**：
-
-| 异动类型 | 用户级下钻口径 | 字段依据 |
-|---|---|---|
-| **留存类波动**（次留 / DN 留存率） | **限定新增设备**（`new_equip = '1'`） | 留存指标 `new_udid_day{N}` 仅含新增 |
-| **ROI 异常**（N 日 ROI） | **不限新增设备**（含新增 + 回流） | `pay_cny_day{N}` / `cost_cny` 是新增 + 回流口径 |
-| **翻倍异常**（M 日-N 日 ROI 翻倍系数） | **不限新增设备**（含新增 + 回流） | 同 ROI |
-| **LTV 异常**（N 日 LTV） | **不限新增设备**（含新增 + 回流） | 分母为新增 + 回流总量 |
-| **付费率异常**（N 日付费率） | **限定新增设备**（`new_equip = '1'`） | 分子分母都仅含新增 |
-
-> 指标完整定义、汇总表 ↔ 基础表口径映射、用户级下钻具体流程见 `knowledge/metrics.md` 第二、三章。
+本 Skill 覆盖留存、ROI、翻倍系数、LTV 和付费率异动。生成 SQL 前，必须从 `knowledge/metrics.md` 确认用户指定指标的准确名称、收入类型、分子、分母、默认人群和成熟条件，再按 `knowledge/tables.md` 与 `knowledge/sql.md` 选表和实现。不在本 Skill 内另行维护指标口径或物理字段映射。
 
 ---
 
@@ -40,27 +38,8 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 
 用户提问里的具体值（如「付费智投」、「腾讯广告」、「wechatgame」）通常**不带维度名**。生成任何 SQL 之前，**先判定值属于哪个维度字段**：
 
-1. **查阅** `metric_definitions.md` 3.3「维度值参考字典」—— 直接命中时直接用对应字段（如「智投/手投」→ `account_mode`，「腾讯广告/巨量引擎」→ `media_cn_name`）。
-2. **多维度可能命中或字典里没有**，跑 quick discovery SQL 实查（汇总表层面，遵循 `sql_guidelines.md` 第二章约束）：
-
-   ```sql
-   -- 例：判定「付费智投」属于 supplier_name 还是 account_mode
-   select 'supplier_name' as dim, supplier_name as val, sum(new_udid) as new_users
-     from dm_ad.app_et_ad_callback_event_da
-    where ds = '<昨天>'
-      and supplier_name like '%付费%智投%'
-      and report_type = 'ad'
-      -- A 类维度全 = 'all'，按 sql_guidelines C3
-    group by supplier_name
-   union all
-   select 'account_mode', account_mode, sum(new_udid)
-     from dm_ad.app_et_ad_callback_event_da
-    where ds = '<昨天>'
-      and account_mode like '%智投%'
-      and report_type = 'ad'
-      -- A 类维度全 = 'all'
-    group by account_mode;
-   ```
+1. **查阅** `knowledge/dimensions.md`，先将用户说法转换为标准业务维度和规范值；再从 `knowledge/tables.md` 中已选目标表的字段映射确定物理字段。禁止根据字段名反推业务维度，也不能套用其他表的字段映射。
+2. **多维度可能命中或字典里没有**，按 `knowledge/sql.md` 的表路由、分区、维度过滤和结果控制规则执行轻量维度值探查。探查 SQL 也必须使用目标表自己的字段映射，不得固定使用某张汇总表。
 
 3. **依然存在多个候选** → 列出 2-3 个候选 + 各自量级供用户确认，**不要擅自选一个继续分析**。
 
@@ -68,12 +47,12 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 
 ## Step 1 — 趋势展示与异常起点判定（汇总表）
 
-从 **汇总表** `dm_ad.app_et_ad_callback_event_da` 提数，按广告维度展示异动指标的整体趋势，**精确定位异常起点**并锁定受影响维度。
+按 `knowledge/sql.md` 的表路由从能同时满足指标、维度和口径的**汇总表**提数，按广告维度展示异动指标的整体趋势，**精确定位异常起点**并锁定受影响维度。不得默认所有端口和场景都使用关键行为汇总表。
 
 - **异常起点判定**：用户描述往往是粗略的（如"4 月开始异常"）。先拉异动指标的日级趋势，**精确判断异常起点的具体日期**，并检查起点**前后一段时间内是否有异常加剧**（先小幅波动后大幅恶化、二次反弹后再下跌等）。最终确定「异常期」用于 Step 2 归因。
 - **时间窗口**：异常期和基期**都不超过 1 个月**（半个月 / 1 周更佳）。例：异常期 4-1 ~ 4-15，基期取 3-1 ~ 3-31 即可，不要拉得更长。时间过长会引入历史趋势噪声、数据成熟度衰减，稀释异动信号。
 - 不涉及用户 ID，直接按广告维度分组聚合。
-- 严守强制约束（`ds = 昨天`、`install_date substr`、投放细分维度处理、N 日成熟度等），详见 `knowledge/sql.md` 第二章。
+- 严守 `knowledge/sql.md` 的分区、业务日期、投放细分维度、成熟度和聚合约束。
 
 ## Step 2 — 异动归因（基础表用户级下钻）
 
@@ -88,10 +67,10 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 
 **执行规则**：
 
-- **按第二章表格选择口径**（限 / 不限新增设备）。
-- 「先定归因周期，再算指标」：先用 `bi.animal_uid_ray_2026` 按`ds + udid`圈定归因周期（CTE / 子查询），再 join 付费 / 活跃 / 闯关表；行为日期必须满足`>= install_date`且`< stop_date`，禁止跨整个时间范围只按`udid`去重。
+- **按 `knowledge/metrics.md` 选择指标人群口径**，严格区分新增设备、回流设备、新用户和回流用户。
+- 「先定归因周期，再算指标」：按 `knowledge/tables.md` 选择用户归因表及所需的付费、活跃或闯关明细表，具体去重键、关联键和归因周期边界严格按 `knowledge/sql.md` 执行。
 - **禁止**汇总表与基础表 join。
-- 详细规则见 `knowledge/sql.md` 第三章、`knowledge/metrics.md` 3.1。
+- 明细表能力与字段见 `knowledge/tables.md`，指标口径见 `knowledge/metrics.md`，关联规则见 `knowledge/sql.md` 的「用户级明细关联」。
 
 ## Step 3 — 报告输出与上传
 
@@ -139,8 +118,8 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 - `confidence="hypothesis"` 时，`conclusion` 不写 `[推测]` 前缀，模板会自动添加；`summary.hypotheses` 中的每一项必须自行以 `[推测]` 开头。
 
 **通用规则**：
-- **全文中文**：所有文案、字段、维度、指标都用中文。**禁止直接显示英文字段名**（如 `media_cn_name` → 展示为「广告平台」），也**禁止任何英文术语 / 缩写 / 业务黑话**（如 fold、tag、ratio、roi 小写、d2、d7 这种）——LLM 必须把它们映射到 `metric_definitions.md` 里的中文指标名（如「翻倍系数」「关键行为标签」「次日留存率」「7 日 ROI」）。
-- **中文命名一致性**：指标 / 维度的中文名严格按 `knowledge/metrics.md` 第二章 / 3.2 / 3.3 字典对应（例：「DN 留存率」「翻倍系数」「广告平台」「关键行为标签」「投放分类」「优化师」「广告账户」「子平台」等）。
+- **全文中文**：所有文案、字段、维度、指标都用中文。**禁止直接显示英文物理字段名**，也不展示 fold、tag、ratio、d2、d7 等英文黑话或非规范缩写。
+- **中文命名一致性**：指标名称严格使用 `knowledge/metrics.md` 的基础指标名，维度名称严格使用 `knowledge/dimensions.md` 的标准业务维度名；可根据上下文添加日期或范围修饰，不自行创造或替换指标名。
 - **报告章节直接显示主标题**（如「当前数据现状」），不要写成「第一部分：xxx」这种修饰语。
 
 ## 4.0 报告标题与元信息
@@ -173,7 +152,7 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 
 展示**异常期**的核心量级，与基期并列对比：
 
-- **量级**：广告新增 (`new_udid`)、广告整体 (`new_udid + back_udid`)、广告成本 (`cost_cny`)
+- **量级**：广告新增、广告整体、广告成本；指标定义与实现字段分别以 `knowledge/metrics.md` 和 `knowledge/tables.md` 为准
 - **前端指标**：CPI、ecpm、CTR、CVR、CTR\*CVR
 - 每项指标给出数值 + 相对基期的偏离 %（涨 / 跌）
 
@@ -193,7 +172,7 @@ description: 当用户提出开心消消乐（简称 Animal）项目广告投放
 - 趋势必须用**折线图**（不要用柱状图 / 表格替代）。
 - 异常时间点用**圆点 + 标注 / 异色高亮**突出显示。
 - 同图叠加基期参考线（历史均值 / 上周同期）作对比。
-- 涉及 N 日指标时遵循 `metric_definitions.md` 1.5 数据成熟度，未成熟段需淡化或标注。
+- 涉及 N 日指标时遵循 `knowledge/metrics.md` 与 `knowledge/sql.md` 的数据成熟度规则，未成熟段需淡化或标注。
 
 **归因模块同样优先使用折线图**（4.2 节）：
 - 凡是**有时间维度的对比数据**（基期 vs 异常期按 install_date 的日粒度变化），一律用折线图，不要只用汇总表格。
