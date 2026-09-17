@@ -55,5 +55,5 @@ MCP 是 Skills 调用外部能力的接口。本项目的 MCP 只负责原子操
 Skill 或报告模板有更新时，在业务项目根目录重新执行安装命令，然后重启 Codex 或新开任务：
 
 ```bash
-bash /tmp/ad-agent-install.sh
+curl -fsSL https://raw.githubusercontent.com/rayyang777/ad-agent/main/install.sh | bash
 ```
